@@ -9,28 +9,25 @@ const projectRoutes = require("./routes/projects");
 
 const app = express();
 
-// Используйте cookie-parser для работы с cookies
 app.use(cookieParser());
 
 // Настройка CORS
 const corsOptions = {
-  origin: "http://localhost:3000", // Разрешаем доступ только с фронтенда на порте 3000
-  methods: "GET,POST,PUT,DELETE", // Разрешаем такие методы
-  allowedHeaders: "Content-Type,Authorization", // Разрешаем нужные заголовки
-  credentials: true, // Разрешить отправку и приём cookie
+  origin: "http://localhost:3000",
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+  credentials: true,
 };
 
-app.use(cors(corsOptions)); // Используем CORS с настройками
+app.use(cors(corsOptions));
 
-// Мидлвары для обработки JSON тела запросов
 app.use(express.json());
 
-// Подключаем маршруты для аутентификации
-app.use("/api/auth", authRoutes); // Все маршруты внутри auth.js будут доступны с префиксом /api/auth
+app.use("/api/auth", authRoutes);
 
 app.use("/api/projects", projectRoutes);
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3500;
 
 app
   .listen(port, () => {
@@ -44,7 +41,6 @@ app
     }
   });
 
-// Подключение к MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))

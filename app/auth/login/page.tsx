@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Alert from "@/components/Alert";
+import { api } from "@/hooks/api";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -59,7 +60,7 @@ export default function LoginPage() {
     setMessageType(null);
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${api}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -72,8 +73,6 @@ export default function LoginPage() {
         localStorage.setItem("accessToken", data.accessToken);
         setMessage("Login successful!");
         setMessageType("success");
-
-
 
         setForm({ email: "", password: "" });
         setTimeout(() => (window.location.href = "/"), 1500);

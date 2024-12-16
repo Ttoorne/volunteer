@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Alert from "./Alert";
+import { api } from "@/hooks/api";
 
 interface ProjectEditModalProps {
   project: any;
@@ -38,8 +39,6 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
     images: project.images || [],
   });
 
-  console.log(projectData.endDate);
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -51,13 +50,42 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
   };
 
   const handleStartDateChange = (date: Date | null) => {
-    setProjectData((prevData) => ({
-      ...prevData,
-      startDate: date ? date.toISOString() : "",
-    }));
+    if (date) {
+      const now = new Date();
+      const selectedDate = new Date(date);
+
+      if (selectedDate.getHours() < 7) {
+        selectedDate.setHours(7, 0, 0, 0);
+      } else if (selectedDate.getHours() >= 21) {
+        selectedDate.setHours(21, 0, 0, 0);
+      }
+
+      setProjectData((prevData) => ({
+        ...prevData,
+        startDate: selectedDate.toISOString(),
+      }));
+    } else {
+      setProjectData((prevData) => ({
+        ...prevData,
+        startDate: "",
+      }));
+    }
   };
 
   const handleEndDateChange = (date: Date | null) => {
+    if (date && new Date(projectData.startDate) >= date) {
+      const correctedDate = new Date(projectData.startDate);
+      correctedDate.setMinutes(correctedDate.getMinutes() + 30);
+      setAlertData({
+        type: "info",
+        message: "End date adjusted to 30 minutes after start date.",
+      });
+      setProjectData((prevData) => ({
+        ...prevData,
+        endDate: correctedDate.toISOString(),
+      }));
+      return;
+    }
     setProjectData((prevData) => ({
       ...prevData,
       endDate: date ? date.toISOString() : "",
@@ -114,13 +142,10 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
         });
       }
 
-      const response = await fetch(
-        `http://localhost:5000/api/projects/${project._id}`,
-        {
-          method: "PUT",
-          body: formData,
-        }
-      );
+      const response = await fetch(`${api}/projects/${project._id}`, {
+        method: "PUT",
+        body: formData,
+      });
 
       if (!response.ok) throw new Error("Failed to update project");
 
@@ -234,11 +259,17 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
                 selected={
                   projectData.startDate ? new Date(projectData.startDate) : null
                 }
+                minDate={new Date()}
                 showTimeSelect
                 timeFormat="HH:mm"
                 dateFormat="dd-MM-yyyy | HH:mm"
                 required
+                timeIntervals={15}
                 onChange={handleStartDateChange}
+                filterTime={(time) => {
+                  const hour = time.getHours();
+                  return hour >= 7 && hour < 21;
+                }}
                 className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow"
               />
             </div>
@@ -249,16 +280,43 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
                 className="flex gap-4 items-center text-sm font-medium text-gray-500 mb-2"
               >
                 <span>End Date and Time</span>
+                <span
+                  className={`${
+                    projectData.endDate &&
+                    new Date(projectData.endDate) >
+                      new Date(projectData.startDate)
+                      ? "md:badge-success md:text-white"
+                      : "md:badge-warning"
+                  } py-3 px-4 hidden md:badge`}
+                >
+                  {projectData.endDate &&
+                  new Date(projectData.endDate) >
+                    new Date(projectData.startDate)
+                    ? "Valid"
+                    : "Required"}
+                </span>
               </label>
               <DatePicker
                 selected={
                   projectData.endDate ? new Date(projectData.endDate) : null
                 }
+                minDate={
+                  projectData.startDate
+                    ? new Date(projectData.startDate)
+                    : undefined
+                }
+                disabled={!projectData.startDate}
+                required
+                timeIntervals={15}
                 showTimeSelect
                 timeFormat="HH:mm"
                 dateFormat="dd-MM-yyyy | HH:mm"
                 onChange={handleEndDateChange}
-                className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow"
+                filterTime={(time) => {
+                  const hour = time.getHours();
+                  return hour >= 7 && hour <= 22;
+                }}
+                className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow  disabled:bg-white disabled:border-gray-400"
               />
             </div>
 

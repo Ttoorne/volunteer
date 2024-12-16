@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import EditUserPage from "@/components/EditUserPage";
 import { fetchUserData } from "@/server/utils/fetchUserData";
+import { api } from "@/hooks/api";
 
 const fetchUserDataName = async (name: string) => {
-  const response = await fetch(`http://localhost:5000/api/auth/users/${name}`, {
+  const response = await fetch(`${api}/auth/users/${name}`, {
     method: "GET",
     cache: "no-store",
   });
@@ -15,7 +16,6 @@ const fetchUserDataName = async (name: string) => {
   return response.json();
 };
 
-// Страница профиля
 const ProfilePage = async ({ params }: { params: { name: string } }) => {
   const token = cookies().get("accessToken")?.value;
 

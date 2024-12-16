@@ -3,6 +3,7 @@ import ProjectCard from "@/components/ProjectCard";
 import SideBarProjects from "@/components/SideBarProjects";
 import React, { useEffect, useState } from "react";
 import background from "@/assets/projects__background.png";
+import { api } from "@/hooks/api";
 
 interface Project {
   _id: string;
@@ -27,19 +28,19 @@ const ProjectsPage = () => {
     endDate: "",
     location: "",
     status: "",
-    sortOrder: "ascending", // Добавлено поле для сортировки
+    sortOrder: "ascending",
   });
 
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const response = await fetch(`http://localhost:5000/api/projects`);
+        const response = await fetch(`${api}/projects`);
         if (!response.ok) {
           throw new Error("Failed to fetch projects");
         }
         const data = await response.json();
         setProjects(data);
-        setFilteredProjects(data); // Изначально показываем все проекты
+        setFilteredProjects(data);
       } catch (error) {
         setError(
           error instanceof Error ? error.message : "An unknown error occurred"
@@ -53,7 +54,6 @@ const ProjectsPage = () => {
   }, []);
 
   useEffect(() => {
-    // Фильтрация и сортировка проектов
     let filtered = projects.filter((project) => {
       const matchesStartDate =
         !filters.startDate ||
@@ -72,7 +72,6 @@ const ProjectsPage = () => {
       );
     });
 
-    // Сортировка по дате
     filtered = filtered.sort((a, b) => {
       const dateA = new Date(a.startDate).getTime();
       const dateB = new Date(b.startDate).getTime();

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { format } from "date-fns";
+import { api } from "@/hooks/api";
 
 interface Project {
   _id: string;
@@ -18,7 +19,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const formattedStartHour = format(new Date(project.startDate), "HH:mm");
 
   const getImageUrl = (imageId: string) => {
-    return `http://localhost:5000/api/projects/images/${imageId}`;
+    return `${api}/projects/images/${imageId}`;
   };
 
   return (

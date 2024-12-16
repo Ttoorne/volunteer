@@ -1,5 +1,7 @@
+import { api } from "@/hooks/api";
+
 export const fetchUserAvatarNavbar = async (avatarPath) => {
-  const apiUrl = `http://localhost:5000/api/auth/avatars/${avatarPath}`;
+  const apiUrl = `${api}/auth/avatars/${avatarPath}`;
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {

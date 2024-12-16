@@ -8,6 +8,7 @@ import connectImg from "../assets/home_page__connect.gif";
 import impactImg from "../assets/home_page__impact.gif";
 import whyVolImg from "../assets/home_page__why-volunteer.gif";
 import globalImg from "../assets/home_page__global.gif";
+import Link from "next/link";
 
 const features = [
   {
@@ -69,7 +70,7 @@ export default class Home extends Component {
 
   render() {
     return (
-      <div className="flex flex-col gap-20">
+      <div className="flex flex-col gap-20 py-10 md:py-12">
         {/* First Section */}
         <section className="w-[90%] md:w-[85%] m-auto flex flex-col lg:flex-row justify-between items-center gap-12">
           <div className="flex flex-col gap-7 text-center lg:text-left">
@@ -84,14 +85,17 @@ export default class Home extends Component {
               counts. Together, we can create positive change and build stronger
               communities.
             </p>
-            <button className="btn btn-md w-[70%] md:w-[40%] animate-slide-up m-auto lg:m-0">
+            <Link
+              href={"/projects"}
+              className="btn text-gray-400 btn-md w-[70%] md:w-[40%] animate-slide-up m-auto lg:m-0 hover:text-gray-300 "
+            >
               Get started
-            </button>
+            </Link>
           </div>
           <Image
             src={communicatePctr}
             alt="Communicate"
-            className="animate-fade-in object-contain w-auto h-auto"
+            className="animate-fade-in object-contain w-[432px] h-[432px] md:w-[464px] md:h-[464px]  lg:w-[512px] lg:h-[512px]"
             priority
           />
         </section>
@@ -146,9 +150,7 @@ export default class Home extends Component {
           <Image
             src={whyVolImg}
             alt="Why Volunteer?"
-            width={500}
-            height={500}
-            className="object-contain"
+            className="object-contain w-[432px] h-[432px] md:w-[464px] md:h-[464px]  lg:w-[512px] lg:h-[512px]"
           />
           <div>
             <h2 className="text-3xl md:text-4xl">
@@ -193,14 +195,17 @@ export default class Home extends Component {
               connect volunteers with impactful projects, fostering a network of
               support, collaboration, and compassion.
             </p>
-            <button className="btn btn-md w-[60%] md:w-[35%] animate-slide-up mt-8">
+            <Link
+              href={"/projects"}
+              className="btn text-gray-400 btn-md w-[60%] md:w-[35%] animate-slide-up mt-8 hover:text-gray-300"
+            >
               Get started
-            </button>
+            </Link>
           </div>
           <Image
             src={globalImg}
             alt="Global Mission"
-            className="fade-in-on-scroll opacity-0 object-contain"
+            className="fade-in-on-scroll opacity-0 object-contain w-[392px] h-[392px] md:w-[424px] md:h-[424px]  lg:w-[472px] lg:h-[472px]"
           />
         </section>
       </div>

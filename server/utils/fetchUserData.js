@@ -1,5 +1,7 @@
+import { api } from "@/hooks/api";
+
 export const fetchUserData = async (token) => {
-  const response = await fetch("http://localhost:5000/api/auth/profiles/me", {
+  const response = await fetch(`${api}/auth/profiles/me`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { api } from "@/hooks/api";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("accessToken")?.value;
@@ -7,17 +8,15 @@ export async function middleware(request: NextRequest) {
   // Путь, требующий авторизации
   const protectedRoutes = ["/dashboard", "/settings"];
 
-  // Проверяем, является ли путь защищенным
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Если токен есть, проверяем его срок действия
   if (!token) {
     const refreshToken = request.cookies.get("refreshToken")?.value;
     try {
       if (refreshToken) {
-        const response = await fetch("http://localhost:5000/api/auth/refresh", {
+        const response = await fetch(`${api}/auth/refresh`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -35,7 +34,7 @@ export async function middleware(request: NextRequest) {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: 15 * 60, // 15 минут
+            maxAge: 15 * 60,
           });
           return newResponse;
         } else {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import EditUserForm from "@/components/EditUserForm";
 import EditSvg from "@/assets/edit.svg";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
+import { api } from "@/hooks/api";
 
 interface Review {
   author: string;
@@ -84,16 +85,13 @@ const EditUserPage = ({
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/auth/users/${name}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(`${api}/auth/users/${name}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -131,15 +129,12 @@ const EditUserPage = ({
     }
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/auth/users/delete/${userData._id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${api}/auth/users/delete/${userData._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json();

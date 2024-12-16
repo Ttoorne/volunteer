@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Alert from "@/components/Alert";
+import { api } from "@/hooks/api";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -15,7 +16,7 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<
     "warning" | "success" | "error" | "info" | null
-  >(null); // Тип сообщения
+  >(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -24,14 +25,13 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    // Сбрасываем сообщение при каждом изменении формы
     if (message) {
       const timer = setTimeout(() => {
         setMessage(null);
         setMessageType(null);
-      }, 5000); // Сбрасываем через 5 секунд
+      }, 5000);
 
-      return () => clearTimeout(timer); // Очистка таймера при размонтировании компонента
+      return () => clearTimeout(timer);
     }
   }, [message]);
 
@@ -79,8 +79,7 @@ export default function RegisterPage() {
     setMessageType(null);
 
     try {
-      // Если имя уникально, продолжаем регистрацию
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${api}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -97,7 +96,6 @@ export default function RegisterPage() {
         // Сохраняем email в localStorage
         localStorage.setItem("email", form.email);
 
-        // Переходим на страницу подтверждения
         router.push("/auth/register/verify");
       } else {
         setMessage(data.error || "Error occurred during registration");

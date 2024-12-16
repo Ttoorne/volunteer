@@ -25,7 +25,6 @@ router.post("/", upload.array("images", 6), async (req, res) => {
     const { title, description, organizer, startDate, endDate, location } =
       req.body;
 
-    // Если req.files пустой, проверьте имя поля в форме (должно быть "images")
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }

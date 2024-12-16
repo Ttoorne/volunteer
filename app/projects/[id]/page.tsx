@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
 import { fetchUserData } from "@/server/utils/fetchUserData";
+import { api } from "@/hooks/api";
+
 import Alert from "@/components/Alert";
 import ProjectEditModal from "@/components/ProjectEditModal";
+import GenerateBackground from "@/components/GenerateBackground";
 
 interface CurrentUser {
   _id: string;
@@ -49,8 +52,9 @@ const ProjectPage = () => {
     message: string;
   } | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const background = GenerateBackground();
 
-  const API_BASE_URL = "http://localhost:5000/api/projects";
+  const API_BASE_URL = `${api}/projects`;
 
   const getTokenFromServer = async () => {
     try {
@@ -197,8 +201,19 @@ const ProjectPage = () => {
   const formattedEndDate =
     project?.endDate && format(new Date(project.endDate), "dd MMM yyyy HH:mm");
 
+  console.log(background);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex justify-center items-center py-16 px-8">
+    <div
+      className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex justify-center items-center py-16 px-8"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url(${background.src})`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       {alertData && (
         <Alert
           key={alertData.message + alertData.type + Date.now()}
@@ -218,7 +233,7 @@ const ProjectPage = () => {
       <div className="w-full max-w-5xl bg-white rounded-lg shadow-2xl overflow-hidden">
         {/* Header Section */}
         <div className="relative bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white p-10">
-          <h1 className="text-4xl lg:text-6xl font-bold mb-6 tracking-wide">
+          <h1 className="text-4xl lg:text-6xl font-bold mt-4 mb-6 tracking-wide">
             {project?.title}
           </h1>
           <p className="text-xl font-semibold">
@@ -296,7 +311,7 @@ const ProjectPage = () => {
             {project?.organizer?.name !== currentUser?.name && currentUser && (
               <button
                 onClick={handleJoinProject}
-                className="mt-8 w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
+                className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
               >
                 Join Project
               </button>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Alert from "@/components/Alert";
+import { api } from "@/hooks/api";
 
 const ResetPasswordPage = () => {
   const router = useRouter();
@@ -40,15 +41,12 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
 
     try {
-      const token = window.location.pathname.split("/").pop(); // Получаем токен из URL
-      const res = await fetch(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newPassword }),
-        }
-      );
+      const token = window.location.pathname.split("/").pop();
+      const res = await fetch(`${api}/auth/reset-password/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
 
       const data = await res.json();
 

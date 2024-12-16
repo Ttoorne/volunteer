@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/Alert";
+import { api } from "@/hooks/api";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -35,16 +36,13 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/auth/forgot-password",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const res = await fetch(`${api}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
       const data = await res.json();
 

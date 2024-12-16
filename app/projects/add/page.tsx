@@ -6,6 +6,7 @@ import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Alert from "@/components/Alert";
+import { api } from "@/hooks/api";
 
 type ProjectData = {
   title: string;
@@ -29,6 +30,7 @@ const AddProjectPage = () => {
   });
 
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState<null | {
     type: "warning" | "success" | "error" | "info";
     message: string;
@@ -36,13 +38,10 @@ const AddProjectPage = () => {
 
   const getTokenFromServer = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/projects/some-route",
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${api}/projects/some-route`, {
+        method: "GET",
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch token");
@@ -109,13 +108,42 @@ const AddProjectPage = () => {
   };
 
   const handleStartDateChange = (date: Date | null) => {
-    setProjectData((prevData) => ({
-      ...prevData,
-      startDate: date ? date.toISOString() : "",
-    }));
+    if (date) {
+      const now = new Date();
+      const selectedDate = new Date(date);
+
+      if (selectedDate.getHours() < 7) {
+        selectedDate.setHours(7, 0, 0, 0);
+      } else if (selectedDate.getHours() >= 21) {
+        selectedDate.setHours(21, 0, 0, 0);
+      }
+
+      setProjectData((prevData) => ({
+        ...prevData,
+        startDate: selectedDate.toISOString(),
+      }));
+    } else {
+      setProjectData((prevData) => ({
+        ...prevData,
+        startDate: "",
+      }));
+    }
   };
 
   const handleEndDateChange = (date: Date | null) => {
+    if (date && new Date(projectData.startDate) >= date) {
+      const correctedDate = new Date(projectData.startDate);
+      correctedDate.setMinutes(correctedDate.getMinutes() + 30);
+      setAlertData({
+        type: "info",
+        message: "End date adjusted to 30 minutes after start date.",
+      });
+      setProjectData((prevData) => ({
+        ...prevData,
+        endDate: correctedDate.toISOString(),
+      }));
+      return;
+    }
     setProjectData((prevData) => ({
       ...prevData,
       endDate: date ? date.toISOString() : "",
@@ -124,7 +152,7 @@ const AddProjectPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     const formData = new FormData();
     formData.append("title", projectData.title);
     formData.append("description", projectData.description);
@@ -159,11 +187,13 @@ const AddProjectPage = () => {
         location: "",
         images: [],
       });
+      setLoading(false);
     } catch (error) {
       setAlertData({
         type: "error",
         message: "An unexpected error occurred. Please try again later.",
       });
+      setLoading(false);
     }
   };
 
@@ -179,7 +209,7 @@ const AddProjectPage = () => {
       <Image
         src={thinkerImg}
         alt="Thinker"
-        className="object-contain w-auto h-auto"
+        className="object-contain w-[488px] h-[488px]  lg:w-[512px] lg:h-[512px]"
       />
       <div className="w-3/4 lg:w-2/4 shadow-2xl rounded-3xl p-7 bg-white">
         <h1 className="text-2xl font-semibold mb-4 text-center text-gray-500">
@@ -202,15 +232,15 @@ const AddProjectPage = () => {
                 placeholder=""
                 required
               />
-            <span
-                  className={`ml-auto ${
-                    projectData.title
-                      ? "md:badge-success md:text-white"
-                      : "md:badge-warning"
-                  } p-4 hidden md:badge`}
-                >
-                  {projectData.title ? "Valid" : "Required"}
-                </span>
+              <span
+                className={`ml-auto ${
+                  projectData.title
+                    ? "md:badge-success md:text-white"
+                    : "md:badge-warning"
+                } p-4 hidden md:badge`}
+              >
+                {projectData.title ? "Valid" : "Required"}
+              </span>
             </label>
           </div>
 
@@ -273,12 +303,17 @@ const AddProjectPage = () => {
                 selected={
                   projectData.startDate ? new Date(projectData.startDate) : null
                 }
+                minDate={new Date()}
                 showTimeSelect
                 timeFormat="HH:mm"
                 dateFormat="dd-MM-yyyy | HH:mm"
                 timeIntervals={15}
                 required
                 onChange={handleStartDateChange}
+                filterTime={(time) => {
+                  const hour = time.getHours();
+                  return hour >= 7 && hour < 21;
+                }}
                 className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow"
               />
               <svg
@@ -326,20 +361,46 @@ const AddProjectPage = () => {
           <div className="mb-6">
             <label
               htmlFor="endDate"
-              className="block text-sm font-medium text-gray-500 mb-2"
+              className="flex gap-4 items-center text-sm font-medium text-gray-500 mb-2"
             >
-              End Date and Time
+              <span>End Date and Time</span>
+              <span
+                className={`${
+                  projectData.endDate &&
+                  new Date(projectData.endDate) >
+                    new Date(projectData.startDate)
+                    ? "md:badge-success md:text-white"
+                    : "md:badge-warning"
+                } py-3 px-4 hidden md:badge`}
+              >
+                {projectData.endDate &&
+                new Date(projectData.endDate) > new Date(projectData.startDate)
+                  ? "Valid"
+                  : "Required"}
+              </span>
             </label>
             <div className="flex items-center gap-2">
               <DatePicker
                 selected={
                   projectData.endDate ? new Date(projectData.endDate) : null
                 }
+                minDate={
+                  projectData.startDate
+                    ? new Date(projectData.startDate)
+                    : undefined
+                }
+                disabled={!projectData.startDate}
+                required
                 showTimeSelect
+                timeIntervals={15}
                 timeFormat="HH:mm"
                 dateFormat="dd-MM-yyyy | HH:mm"
                 onChange={handleEndDateChange}
-                className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow"
+                filterTime={(time) => {
+                  const hour = time.getHours();
+                  return hour >= 7 && hour <= 22;
+                }}
+                className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow  disabled:bg-white disabled:border-gray-400"
               />
               <svg
                 viewBox="0 0 1024 1024"
@@ -445,8 +506,13 @@ const AddProjectPage = () => {
           <button
             type="submit"
             className="w-full text-white btn btn-active btn-primary hover:brightness-90"
+            disabled={loading}
           >
-            Submit
+            {loading ? (
+              <span className="loading loading-spinner md:loading-md lg:loading-lg"></span>
+            ) : (
+              <span>Submit</span>
+            )}
           </button>
         </form>
       </div>

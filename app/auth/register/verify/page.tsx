@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Alert from "@/components/Alert"; // Путь к компоненту Alert
-import Link from "next/link"; // Добавим импорт Link для навигации
+import Alert from "@/components/Alert";
+import Link from "next/link";
+import { api } from "@/hooks/api";
 
 export default function VerifyPage() {
   const [code, setCode] = useState("");
@@ -33,7 +34,7 @@ export default function VerifyPage() {
       );
       setMessageType("error");
       setTimeout(() => {
-        // router.push("/auth/register");
+        router.push("/auth/register");
       }, 3000);
     } else {
       const timer = setInterval(() => {
@@ -68,7 +69,7 @@ export default function VerifyPage() {
     setMessageType(null);
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/verify", {
+      const res = await fetch(`${api}/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: code.toString() }),

@@ -1,21 +1,20 @@
 "use client";
+import { api } from "@/hooks/api";
 
 const LogoutButton = () => {
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/logout", {
+      const response = await fetch(`${api}/auth/logout`, {
         method: "POST",
-        credentials: "include", // Включает cookies
+        credentials: "include",
       });
 
       if (response.ok) {
-        // Удаляем токены с клиента
         document.cookie =
           "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
         document.cookie =
           "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
 
-        // Перезагружаем страницу или перенаправляем пользователя
         window.location.reload();
       } else {
         console.error("Failed to log out");
