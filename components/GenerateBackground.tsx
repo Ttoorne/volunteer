@@ -21,7 +21,7 @@ const GenerateBackground = () => {
     background = isha; // Фон для Isha (19:00 - 5:00)
   }
 
-  return dzuhr;
+  return background;
 };
 
 export default GenerateBackground;

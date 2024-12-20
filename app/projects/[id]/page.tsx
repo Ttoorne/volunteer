@@ -9,6 +9,9 @@ import { api } from "@/hooks/api";
 import Alert from "@/components/Alert";
 import ProjectEditModal from "@/components/ProjectEditModal";
 import GenerateBackground from "@/components/GenerateBackground";
+import Link from "next/link";
+import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
+import Image from "next/image";
 
 interface CurrentUser {
   _id: string;
@@ -17,6 +20,7 @@ interface CurrentUser {
   role: string;
   firstName: string;
   lastName: string;
+  avatar: string;
 }
 
 interface Organizer {
@@ -52,6 +56,8 @@ const ProjectPage = () => {
     message: string;
   } | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
+
   const background = GenerateBackground();
 
   const API_BASE_URL = `${api}/projects`;
@@ -109,6 +115,37 @@ const ProjectPage = () => {
       setLoading(false);
     }
   };
+
+  const loadAvatar = async (avatarId: string) => {
+    try {
+      const imageUrl = await fetchUserAvatar(avatarId);
+      return imageUrl;
+    } catch {
+      return "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
+    }
+  };
+
+  useEffect(() => {
+    const fetchAvatars = async () => {
+      if (!project?.participants) return;
+
+      const avatarPromises = project.participants.map(async (participant) => {
+        const avatarId = participant.user.avatar;
+        const imageUrl = await loadAvatar(avatarId);
+        return { avatarId, imageUrl };
+      });
+
+      const avatars = await Promise.all(avatarPromises);
+      const avatarMap = avatars.reduce(
+        (acc, { avatarId, imageUrl }) => ({ ...acc, [avatarId]: imageUrl }),
+        {}
+      );
+
+      setAvatarUrls(avatarMap);
+    };
+
+    fetchAvatars();
+  }, [project]);
 
   const handleJoinProject = async () => {
     if (!currentUser || !id) return;
@@ -187,10 +224,54 @@ const ProjectPage = () => {
     window.location.href = "/projects";
   };
 
+  const handleLeaveProject = async () => {
+    if (!currentUser || !id) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          participants: project?.participants.filter(
+            (participant) => participant.user._id !== currentUser?._id
+          ),
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to leave the project");
+
+      const updatedProject = await response.json();
+      setProject(updatedProject.project);
+      console.log("Updated project:", updatedProject.project);
+      setAlertData({
+        type: "info",
+        message: "Successfully left the project!",
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      setAlertData({ type: "warning", message: errorMessage });
+    }
+  };
+
+  const isUserParticipant = project?.participants.some(
+    (participant) => participant.user._id === currentUser?._id
+  );
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
+      <div
+        className="h-full bg-white flex justify-center items-center py-16 px-8"
+        style={{
+          minHeight: "100vh",
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${background.src})`,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        <span className="loading loading-spinner loading-lg text-secondary"></span>
       </div>
     );
   }
@@ -200,8 +281,6 @@ const ProjectPage = () => {
     format(new Date(project.startDate), "dd MMM yyyy HH:mm");
   const formattedEndDate =
     project?.endDate && format(new Date(project.endDate), "dd MMM yyyy HH:mm");
-
-  console.log(background);
 
   return (
     <div
@@ -214,13 +293,7 @@ const ProjectPage = () => {
         backgroundAttachment: "fixed",
       }}
     >
-      {alertData && (
-        <Alert
-          key={alertData.message + alertData.type + Date.now()}
-          type={alertData.type}
-          message={alertData.message}
-        />
-      )}
+      {alertData && <Alert type={alertData.type} message={alertData.message} />}
 
       {/* Modals */}
       {isEditModalOpen && (
@@ -274,14 +347,14 @@ const ProjectPage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <div className="p-5 bg-white border border-gray-200 rounded-lg shadow-md">
+            <div className="p-5 bg-white border border-gray-200 rounded-2xl shadow-md">
               <h3 className="font-semibold text-gray-800 text-xl mb-3">
                 Location
               </h3>
               <p className="text-gray-700">{project?.location}</p>
             </div>
             {project?.endDate && (
-              <div className="p-5 bg-white border border-gray-200 rounded-lg shadow-md">
+              <div className="p-5 bg-white border border-gray-200 rounded-2xl shadow-md">
                 <h3 className="font-semibold text-gray-800 text-xl mb-3">
                   End Date
                 </h3>
@@ -295,25 +368,50 @@ const ProjectPage = () => {
             <h3 className="font-semibold text-gray-900 text-2xl mb-6">
               Participants
             </h3>
-            <ul className="space-y-4">
+            <div className="flex flex-wrap gap-4">
               {project?.participants.map((participant) => (
-                <li
+                <Link
+                  href={`/profile/${participant.user.name}`}
                   key={participant.user._id}
-                  className="p-4 bg-gray-50 rounded-lg border text-gray-800 flex justify-between items-center shadow-sm"
+                  className="flex flex-col items-center bg-white rounded-lg border border-gray-200 shadow-md p-4 w-48 hover:shadow-xl transition-shadow "
                 >
-                  <span>
-                    {participant.user.name} ({participant.user.firstName}{" "}
-                    {participant.user.lastName})
-                  </span>
-                </li>
+                  <div className="w-20 h-20 mb-4">
+                    <img
+                      src={
+                        avatarUrls[participant.user.avatar] ||
+                        "https://cdn-icons-png.flaticon.com/512/3607/3607444.png"
+                      }
+                      alt={participant.user.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-gray-900">
+                      {participant.user.name}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {participant.user.firstName} {participant.user.lastName}
+                    </p>
+                  </div>
+                </Link>
               ))}
-            </ul>
-            {project?.organizer?.name !== currentUser?.name && currentUser && (
+            </div>
+            {project?.organizer?.name !== currentUser?.name &&
+              currentUser &&
+              !isUserParticipant && (
+                <button
+                  onClick={handleJoinProject}
+                  className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
+                >
+                  Join Project
+                </button>
+              )}
+            {isUserParticipant && currentUser && (
               <button
-                onClick={handleJoinProject}
-                className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
+                onClick={handleLeaveProject}
+                className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
               >
-                Join Project
+                Leave Project
               </button>
             )}
           </div>
@@ -329,7 +427,7 @@ const ProjectPage = () => {
                   key={imageId}
                   src={getImageUrl(imageId)}
                   alt="Project"
-                  className="rounded-lg shadow-lg object-cover w-full h-48 cursor-pointer transform transition duration-300 hover:scale-105"
+                  className="rounded-lg shadow-lg object-cover w-full h-48 cursor-pointer transform transition duration-300 hover:scale-105 bg-gray-800 skeleton"
                   onClick={() => setSelectedImage(imageId)}
                 />
               ))}

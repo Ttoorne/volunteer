@@ -21,8 +21,8 @@ const Footer = () => {
           <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
           <ul className="space-y-2">
             <li>
-              <Link href="/events" className="hover:underline">
-                Events
+              <Link href="/projects" className="hover:underline">
+                Projects
               </Link>
             </li>
             <li>

@@ -36,7 +36,14 @@ const features = [
 export default class Home extends Component {
   observer: IntersectionObserver | null = null;
 
+  state = {
+    showScrollToTopButton: false, // Состояние для отображения кнопки
+  };
+
   componentDidMount() {
+    // Обработчик прокрутки страницы
+    window.addEventListener("scroll", this.handleScroll);
+
     if (typeof window !== "undefined") {
       this.observer = new IntersectionObserver(
         (entries) => {
@@ -64,7 +71,19 @@ export default class Home extends Component {
     }
   }
 
+  handleScroll = () => {
+    const scrollPosition = window.scrollY;
+    const showButton = scrollPosition > 3500;
+    this.setState({ showScrollToTopButton: showButton });
+  };
+
+  scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" }); // Скроллим на верх
+  };
+
   componentWillUnmount() {
+    // Убираем обработчик прокрутки
+    window.removeEventListener("scroll", this.handleScroll);
     this.observer?.disconnect();
   }
 
@@ -208,6 +227,16 @@ export default class Home extends Component {
             className="fade-in-on-scroll opacity-0 object-contain w-[392px] h-[392px] md:w-[424px] md:h-[424px]  lg:w-[472px] lg:h-[472px]"
           />
         </section>
+
+        {this.state.showScrollToTopButton && (
+          <button
+            title="To the top"
+            className="fixed bottom-6 right-8 w-12 h-12 md:w-14 md:h-14 bg-gray-800 border-2 border-gray-800 flex items-center justify-center text-center text-white text-3xl md:text-4xl  rounded-full shadow-xl hover:shadow-2xl transition-all ease-in-out duration-300 transform hover:scale-110 animate-fade-in"
+            onClick={this.scrollToTop}
+          >
+            <span>↑</span>
+          </button>
+        )}
       </div>
     );
   }

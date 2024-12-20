@@ -24,7 +24,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
   return (
     <div className="h-72 lg:h-80 card lg:card-side bg-gray-100 flex flex-col shadow-xl group ">
-      <figure className="w-2/4 overflow-hidden flex justify-center items-center bg-gray-200 border-r-4 border-gray-300">
+      <figure className="w-2/4 overflow-hidden flex justify-center items-center  bg-gray-800 border-r-4 border-gray-300 skeleton">
         <img
           src={getImageUrl(project.images[0])}
           alt="Project image"

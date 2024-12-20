@@ -166,7 +166,7 @@ const AddProjectPage = () => {
     });
 
     try {
-      const response = await fetch("http://localhost:5000/api/projects", {
+      const response = await fetch(`${api}/projects`, {
         method: "POST",
         body: formData,
       });

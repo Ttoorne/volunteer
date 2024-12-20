@@ -92,8 +92,18 @@ const ProjectsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center flex-col items-center h-96">
-        <span className="loading loading-spinner loading-lg"></span>
+      <div
+        className="flex justify-center flex-col items-center  px-4 pt-8 pb-16  h-full relative"
+        style={{
+          minHeight: "100vh",
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${background.src})`,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        <span className="loading loading-spinner loading-lg text-warning"></span>
       </div>
     );
   }

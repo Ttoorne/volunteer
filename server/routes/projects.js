@@ -159,24 +159,36 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
       images = newImages;
     }
 
-    if (participants) {
-      const isAlreadyParticipant = project.participants.some(
-        (participant) =>
-          participant.user.toString() === participants[0]._id.toString()
-      );
+    if (Array.isArray(participants)) {
+      if (participants.length > 0) {
+        // Удаляем участников из проекта, которых нет в новом списке
+        project.participants = project.participants.filter(
+          (participant) =>
+            !participants.some(
+              (newParticipant) =>
+                newParticipant._id.toString() === participant.user.toString()
+            )
+        );
 
-      if (isAlreadyParticipant) {
-        return res.status(400).json({
-          message: "User is already a participant of the project",
-        });
+        // Добавляем новых участников в проект
+        for (let newParticipant of participants) {
+          const isAlreadyParticipant = project.participants.some(
+            (participant) =>
+              participant.user.toString() === newParticipant._id.toString()
+          );
+
+          if (!isAlreadyParticipant) {
+            const participant = {
+              user: newParticipant._id,
+              joinedAt: new Date().toISOString(),
+            };
+            project.participants.push(participant);
+          }
+        }
+      } else {
+        // Если participants пустой, можно очистить список участников
+        project.participants = [];
       }
-
-      const participant = {
-        user: participants[0]._id,
-        joinedAt: new Date().toISOString(),
-      };
-
-      project.participants.push(participant);
     }
 
     // Обновляем поля проекта
