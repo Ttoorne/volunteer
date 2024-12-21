@@ -144,7 +144,7 @@ router.post("/login", async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "30m" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
@@ -157,7 +157,7 @@ router.post("/login", async (req, res) => {
       httpOnly: true, // Запрещает доступ к куки через JavaScript
       secure: process.env.NODE_ENV === "production", // Использовать только HTTPS в продакшене
       sameSite: "lax", // Меняем на lax для междоменной работы
-      maxAge: 15 * 60 * 1000, // 15 минут
+      maxAge: 30 * 60 * 1000, // 15 минут
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -279,14 +279,14 @@ router.post("/refresh", async (req, res) => {
     const newAccessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "30m" }
     );
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Убедитесь, что это включено на продакшн-сервере
       sameSite: "lax", // Настройка для безопасности cookies
-      maxAge: 15 * 60 * 1000, // 15 минут
+      maxAge: 30 * 60 * 1000, // 15 минут
     });
 
     res.json({ accessToken: newAccessToken }); // Отправляем новый токен в ответе

@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
   // }
 
   return (
-    <nav className="z-50 px-2 py-0 bg-white shadow-sm">
+    <nav className="z-50 px-2 py-0 bg-white shadow-sm ">
       <div className="container mx-auto flex justify-between items-center text-lg font-normal">
         <div className="ml-3">
           <Link href="/" className="flex items-center">

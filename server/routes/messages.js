@@ -108,6 +108,21 @@ router.get("/:chatId", async (req, res) => {
   }
 });
 
+router.patch("/mark-as-read", async (req, res) => {
+  const { messageIds } = req.body;
+
+  try {
+    await Message.updateMany(
+      { _id: { $in: messageIds } },
+      { $set: { isRead: true } }
+    );
+    res.status(200).json({ message: "Messages marked as read" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update messages" });
+  }
+});
+
 // Удаление сообщения
 router.delete("/:messageId", async (req, res) => {
   try {
