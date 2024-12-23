@@ -221,6 +221,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
+    console.log(messagesEndRef);
   }, [messages]);
 
   // Группируем сообщения по датам
@@ -245,7 +246,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
               <div className="text-center text-gray-200 mt-4 mb-2">{date}</div>
               {groupedMessages[date].map((msg) => (
                 <div
-                  key={`${msg._id}-${chatId}`}
+                  key={`${msg._id}-${chatId}-${date}`}
                   className={`flex ${
                     msg.senderId === userId ? "justify-end" : "justify-start"
                   } mb-4`}

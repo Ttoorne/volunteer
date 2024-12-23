@@ -74,17 +74,9 @@ const Navbar: React.FC = () => {
     setAvatarLoaded(true);
   };
 
-  // if (isLoading) {
-  //   return (
-  //     <nav className="z-50 px-2 py-0 bg-white flex justify-center shadow-sm text-center min-h-28">
-  //       <span className="loading loading-ring text-primary loading-lg"></span>
-  //     </nav>
-  //   );
-  // }
-
   return (
-    <nav className="z-50 px-2 py-0 bg-white shadow-sm ">
-      <div className="container mx-auto flex justify-between items-center text-lg font-normal">
+    <nav className="z-50 py-0 bg-white shadow-sm ">
+      <div className="container mx-auto flex items-center text-lg font-normal">
         <div className="ml-3">
           <Link href="/" className="flex items-center">
             <Image
@@ -96,7 +88,7 @@ const Navbar: React.FC = () => {
             <p className="font-medium">VOLUNTEER</p>
           </Link>
         </div>
-        <div className="space-x-5 text-base md:text-lg lg:text-xl">
+        <div className="space-x-5 text-base md:text-lg lg:text-xl mx-auto">
           <Link
             href="/"
             className={`${
@@ -117,6 +109,16 @@ const Navbar: React.FC = () => {
           >
             Projects
           </Link>
+          <Link
+            href="/about"
+            className={`${
+              pathname === "/about"
+                ? "bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-transparent bg-clip-text"
+                : "text-black"
+            }`}
+          >
+            About
+          </Link>
           {user && (
             <Link
               href="/chat"
@@ -130,7 +132,7 @@ const Navbar: React.FC = () => {
             </Link>
           )}
         </div>
-        <div className="mr-2 flex items-center space-x-4">
+        <div className="mr-2 flex items-center space-x-4 ml-auto">
           {(isLoading || !avatarLoaded) && user ? (
             <div className="mr-2 w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-gray-300 animate-pulse"></div>
           ) : user ? (

@@ -1,6 +1,8 @@
+"use client";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, isBefore, isAfter } from "date-fns";
 import { api } from "@/hooks/api";
+import { useEffect } from "react";
 
 interface Project {
   _id: string;
@@ -18,9 +20,55 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const formattedStartDate = format(new Date(project.startDate), "dd MMM yyyy");
   const formattedStartHour = format(new Date(project.startDate), "HH:mm");
 
+  const url = `${api}/projects`;
+
   const getImageUrl = (imageId: string) => {
-    return `${api}/projects/images/${imageId}`;
+    return `${url}/images/${imageId}`;
   };
+
+  async function updateProjectStatus(projectId: string, newStatus: string) {
+    try {
+      const response = await fetch(`${url}/${projectId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update project status");
+      }
+
+      const data = await response.json();
+      console.log("Project status updated:", data);
+      return data;
+    } catch (error) {
+      console.error("Error updating project status:", error);
+      throw error;
+    }
+  }
+
+  useEffect(() => {
+    const now = new Date();
+    const start = new Date(project.startDate);
+    const end = new Date(project.endDate);
+
+    let newStatus = project.status;
+
+    if (isBefore(now, start)) {
+      newStatus = "open";
+    } else if (isAfter(now, end)) {
+      newStatus = "completed";
+    } else if (isAfter(now, start) && isBefore(now, end)) {
+      newStatus = "in-progress";
+    }
+
+    if (newStatus !== project.status) {
+      updateProjectStatus(project._id, newStatus);
+    }
+  }, [project]);
 
   return (
     <div className="h-72 lg:h-80 card lg:card-side bg-gray-100 flex flex-col shadow-xl group ">
@@ -30,8 +78,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           alt="Project image"
           className="object-cover w-full h-full"
         />
-        <p className="absolute left-4 top-4 text-white font-medium badge badge-success p-5 opacity-0 group-hover:opacity-100 ">
-          {project.status.toUpperCase()}
+        <p
+          className={`absolute left-4 top-4 text-white font-medium badge p-5 opacity-0 group-hover:opacity-100 ${
+            project.status === "open"
+              ? "badge-success"
+              : project.status === "in-progress"
+              ? "badge-warning"
+              : "bg-blue-500 border-transparent"
+          }`}
+        >
+          {project.status == "in-progress"
+            ? "IN PROGRESS"
+            : project.status.toUpperCase()}
         </p>
       </figure>
       <div className="card-body">

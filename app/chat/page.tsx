@@ -72,6 +72,7 @@ const ChatPage: React.FC = () => {
     }
   }, [userId, token]);
 
+  // Внутри компонента ChatPage
   useEffect(() => {
     const fetchChatsAndUsers = async () => {
       if (token) {
@@ -81,7 +82,23 @@ const ChatPage: React.FC = () => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const chatsData = await chatsResponse.json();
-          setChats(chatsData.data);
+
+          // Сортировка чатов по дате последнего сообщения
+          const sortedChats = chatsData.data.sort((a: any, b: any) => {
+            const lastMessageA = a.messages?.[a.messages.length - 1];
+            const lastMessageB = b.messages?.[b.messages.length - 1];
+
+            const dateA = lastMessageA
+              ? new Date(lastMessageA.createdAt)
+              : new Date(0);
+            const dateB = lastMessageB
+              ? new Date(lastMessageB.createdAt)
+              : new Date(0);
+
+            return dateB.getTime() - dateA.getTime(); // Сортировка в порядке убывания
+          });
+
+          setChats(sortedChats);
 
           const usersResponse = await fetch(`${api}/auth/users`, {
             method: "GET",
@@ -146,46 +163,50 @@ const ChatPage: React.FC = () => {
               <li
                 key={chat._id}
                 onClick={() => openChat(chat)}
-                className={`p-4 mb-2 rounded-lg cursor-pointer ${
+                className={`flex items-center justify-between p-4 mb-2 rounded-lg cursor-pointer ${
                   activeChat?._id === chat._id
                     ? "bg-blue-100"
                     : "hover:bg-gray-100"
-                }`}
+                } `}
               >
-                <div className="flex justify-between">
-                  <span>{participant?.name || "Unknown user"}</span>
-                  {getUnreadCount(chat) > 0 && (
-                    <span className="text-red-500 font-semibold">
-                      {getUnreadCount(chat)}
-                    </span>
-                  )}
+                <div>
+                  <div className="flex justify-between">
+                    <span>{participant?.name || "Unknown user"}</span>
+                  </div>
+                  <div
+                    className={`text-sm mt-1 flex items-center ${
+                      isMyMessage
+                        ? isRead
+                          ? "text-blue-600 font-semibold"
+                          : "text-gray-500"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {lastMessage ? (
+                      <>
+                        {isMyMessage && (
+                          <span className="mr-1">
+                            {isRead ? (
+                              <i className="fas fa-check-double text-green-500">
+                                ✓✓
+                              </i>
+                            ) : (
+                              <i className="fas fa-check text-gray-500">✓</i>
+                            )}
+                          </span>
+                        )}
+                        {lastMessage.content}
+                      </>
+                    ) : (
+                      "No messages yet"
+                    )}
+                  </div>
                 </div>
-                <div
-                  className={`text-sm mt-1 flex items-center ${
-                    isMyMessage
-                      ? isRead
-                        ? "text-blue-600 font-semibold"
-                        : "text-gray-500"
-                      : "text-gray-600"
-                  }`}
-                >
-                  {lastMessage ? (
-                    <>
-                      {isMyMessage && (
-                        <span className="mr-1">
-                          {isRead ? (
-                            <i className="fas fa-check-double text-green-500">
-                              ✓✓
-                            </i>
-                          ) : (
-                            <i className="fas fa-check text-gray-500">✓</i>
-                          )}
-                        </span>
-                      )}
-                      {lastMessage.content}
-                    </>
-                  ) : (
-                    "No messages yet"
+                <div>
+                  {getUnreadCount(chat) > 0 && (
+                    <p className="text-white bg-blue-400 w-7 h-7 font-medium rounded-full flex items-center justify-center">
+                      <span>{getUnreadCount(chat)}</span>
+                    </p>
                   )}
                 </div>
               </li>
@@ -220,7 +241,7 @@ const ChatPage: React.FC = () => {
             />
           </div>
         ) : (
-          <p className="text-white text-2xl text-center">
+          <p className="text-white text-2xl text-center mt-8">
             Choose chat from the list
           </p>
         )}

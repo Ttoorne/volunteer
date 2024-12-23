@@ -226,7 +226,7 @@ const EditUserPage = ({
       {/* Achievements */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white ">
         <div className="flex justify-between">
-          <h2 className="text-base m:text-lg lg:text-xl">My Achievements</h2>
+          <h2 className="text-base m:text-lg lg:text-xl">Achievements</h2>
         </div>
         <div className="divider m-0"></div>
         <div className="flex flex-col gap-6">

@@ -222,6 +222,37 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
   }
 });
 
+// Изменение статуса проекта по ID
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
+
+    const project = await Project.findById(req.params.id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    project.status = status;
+    await project.save();
+
+    res.status(200).json({
+      message: "Status updated successfully",
+      project,
+    });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    res.status(500).json({
+      message: "Error updating status",
+      error: error.message,
+    });
+  }
+});
+
 // Удаление проекта по ID
 router.delete("/:id", async (req, res) => {
   try {
