@@ -135,7 +135,12 @@ const ChatPage: React.FC = () => {
     return unreadMessages.length;
   };
 
-  if (!userId || !token || !socket) return <p>Загрузка...</p>;
+  if (!userId || !token || !socket)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="loading loading-ring loading-lg text-primary mx-auto"></span>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
@@ -229,7 +234,7 @@ const ChatPage: React.FC = () => {
       >
         {activeChat && chatParticipant ? (
           <div>
-            <h2 className="flex items-center text-2xl font-medium mb-4 px-4 bg-white sticky top-0 h-20">
+            <h2 className="flex items-center text-2xl font-medium mb-4 px-4 bg-white sticky z-50 top-0 h-20">
               <span>{chatParticipant.name}</span>
             </h2>
             <ChatComponent

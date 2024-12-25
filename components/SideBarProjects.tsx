@@ -64,8 +64,8 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
           >
             <option value="">All Statuses</option>
             <option value="open">Open</option>
-            <option value="closed">Closed</option>
-            <option value="in process">In Process</option>
+            <option value="completed">Completed</option>
+            <option value="in-progress">In Progress</option>
           </select>
         </label>
 

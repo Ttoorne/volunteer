@@ -3,6 +3,7 @@ import ProjectCard from "@/components/ProjectCard";
 import SideBarProjects from "@/components/SideBarProjects";
 import React, { useEffect, useState } from "react";
 import background from "@/assets/projects__background.png";
+import bgImg from "@/assets/projects__page_bg.jpg";
 import { api } from "@/hooks/api";
 
 interface Project {
@@ -13,7 +14,7 @@ interface Project {
   startDate: string;
   endDate: string;
   location: string;
-  status: "open" | "closed" | "in process";
+  status: "open" | "completed" | "in-progress";
 }
 
 const ProjectsPage = () => {
@@ -96,7 +97,7 @@ const ProjectsPage = () => {
         className="flex justify-center flex-col items-center  px-4 pt-8 pb-16  h-full relative"
         style={{
           minHeight: "100vh",
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${background.src})`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${bgImg.src})`,
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
@@ -121,7 +122,7 @@ const ProjectsPage = () => {
       className="w-7/10 m-auto flex px-4 pt-8 pb-16 justify-around h-full relative"
       style={{
         minHeight: "100vh",
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url(${background.src})`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url(${bgImg.src})`,
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",

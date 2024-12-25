@@ -39,34 +39,36 @@ const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
   };
 
   return (
-    <div className="carousel-item bg-white border-gray-800 border-2 rounded-box shadow-md hover:border-teal-600 transition w-[31%] max-w-md mx-auto flex flex-col">
+    <div className="carousel-item bg-white border-gray-300 border-2 rounded-xl shadow-md hover:border-teal-600 transition-all w-full sm:w-[48%] md:w-[31%] mx-auto flex flex-col">
       {/* Image */}
       {images && images.length > 0 ? (
         <img
           src={getImageUrl(project.images[0])}
           alt={title}
-          className="w-full h-40 object-cover rounded-b-none rounded-t-box  bg-gray-700 skeleton"
+          className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-t-xl rounded-b-none bg-gray-700 skeleton"
         />
       ) : (
-        <div className="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-500">
+        <div className="w-full h-40 sm:h-48 md:h-56 bg-gray-200 flex items-center justify-center text-gray-500 rounded-t-xl">
           No Image
         </div>
       )}
 
       {/* Content */}
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-4 sm:p-5 flex flex-col flex-grow">
         {/* Title */}
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
+        <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">
+          {title}
+        </h3>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-4">
+        <p className="text-gray-600 text-base mb-4 sm:mb-6 mt-auto line-clamp-3">
           {description.length > 100
             ? `${description.slice(0, 100)}...`
             : description}
         </p>
 
         {/* Dates and Location */}
-        <div className="text-gray-500 text-sm mb-4 mt-auto">
+        <div className="text-gray-500 text-base mb-4 mt-auto">
           <p>
             <span className="font-semibold">Start:</span>{" "}
             {formatDateTime(startDate)}
@@ -81,15 +83,15 @@ const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
         </div>
 
         {/* Status and Link */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex flex-col lg:flex-row justify-between items-center mt-4">
           <div
-            className={`inline-block p-3 rounded-box text-sm font-medium ${statusColor}`}
+            className={`inline-block p-3 rounded-xl text-sm font-medium ${statusColor}`}
           >
             {status === "in-progress" ? "IN PROGRESS" : status.toUpperCase()}
           </div>
           <Link
             href={`/project/${project._id}`}
-            className="bg-teal-700 text-white p-3 rounded-2xl hover:bg-teal-600 transition"
+            className="bg-teal-700 text-white p-3 rounded-2xl hover:bg-teal-600 transition duration-300"
           >
             Watch Project
           </Link>

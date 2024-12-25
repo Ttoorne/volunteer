@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,6 +21,7 @@ const Navbar: React.FC = () => {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const getTokenFromServer = async () => {
     try {
@@ -75,26 +75,31 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="z-50 py-0 bg-white shadow-sm ">
-      <div className="container mx-auto flex items-center text-lg font-normal">
-        <div className="ml-3">
-          <Link href="/" className="flex items-center">
+    <nav className="relative z-40 py-4 bg-white shadow-lg flex">
+      <div className="container mx-auto flex items-center justify-between text-gray-800 text-lg font-medium">
+        {/* Логотип */}
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center relative">
             <Image
               src={logo}
               alt="Logo"
               priority
-              className="w-28 h-28 lg:w-32 lg:h-32"
+              className="w-12 h-12 lg:w-24 lg:h-24 absolute hover:scale-110 duration-200 hover:duration-200"
             />
-            <p className="font-medium">VOLUNTEER</p>
+            <p className="text-2xl font-extrabold tracking-wider ml-[55%] hover:text-teal-600 transition duration-300">
+              VOLUNTEER
+            </p>
           </Link>
         </div>
-        <div className="space-x-5 text-base md:text-lg lg:text-xl mx-auto">
+
+        {/* Навигационные ссылки (скрываются на мобильных устройствах) */}
+        <div className="hidden md:flex space-x-6 text-base md:text-lg lg:text-xl">
           <Link
             href="/"
             className={`${
               pathname === "/"
-                ? "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text"
-                : "text-black"
+                ? "text-indigo-400 underline underline-offset-4 decoration-wavy decoration-indigo-400"
+                : "hover:text-indigo-400 transition duration-300"
             }`}
           >
             Home
@@ -103,8 +108,8 @@ const Navbar: React.FC = () => {
             href="/projects"
             className={`${
               pathname.startsWith("/projects") && pathname !== "/projects/add"
-                ? "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-transparent bg-clip-text"
-                : "text-black"
+                ? "text-orange-600 underline underline-offset-4 decoration-wavy decoration-orange-600"
+                : "hover:text-orange-600 transition duration-300"
             }`}
           >
             Projects
@@ -113,8 +118,8 @@ const Navbar: React.FC = () => {
             href="/about"
             className={`${
               pathname === "/about"
-                ? "bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-transparent bg-clip-text"
-                : "text-black"
+                ? "text-yellow-500 underline underline-offset-4 decoration-wavy decoration-yellow-500"
+                : "hover:text-yellow-500 transition duration-300"
             }`}
           >
             About
@@ -124,46 +129,51 @@ const Navbar: React.FC = () => {
               href="/chat"
               className={`${
                 pathname === "/chat"
-                  ? "bg-gradient-to-r from-cyan-600 via-teal-600 to-green-600 text-transparent bg-clip-text"
-                  : "text-black"
+                  ? "text-teal-600 underline underline-offset-4 decoration-wavy decoration-teal-600"
+                  : "hover:text-teal-600 transition duration-300"
               }`}
             >
               Messages
             </Link>
           )}
         </div>
-        <div className="mr-2 flex items-center space-x-4 ml-auto">
+
+        {/* Аватар или кнопка входа */}
+        <div className="items-center space-x-4 hidden md:flex">
           {(isLoading || !avatarLoaded) && user ? (
-            <div className="mr-2 w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-gray-300 animate-pulse"></div>
+            <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-300 animate-pulse"></div>
           ) : user ? (
             <div className="dropdown dropdown-end">
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle avatar btn-md lg:btn-lg"
+                className="relative flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-gray-300 shadow-md hover:scale-110 transition-transform"
               >
-                <div className="w-full rounded-full">
-                  <img
-                    alt="Avatar"
-                    src={
-                      userAvatarUrl ||
-                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-DSW54utMSZ6J1F9luVr6YYDoRZ-FQYCL3w&s"
-                    }
-                    className={`object-cover rounded-full w-full h-full ${
-                      !avatarLoaded ? "skeleton" : ""
-                    }`}
-                  />
-                </div>
+                <img
+                  alt="Avatar"
+                  src={
+                    userAvatarUrl ||
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-DSW54utMSZ6J1F9luVr6YYDoRZ-FQYCL3w&s"
+                  }
+                  className="object-cover rounded-full w-full h-full"
+                />
               </div>
               <ul
                 tabIndex={0}
-                className="z-55 menu menu-md lg:menu-lg dropdown-content bg-white rounded-box z-[1] mt-3 w-52 text-base p-2 shadow-md"
+                className="menu menu-compact dropdown-content mt-3 p-2 shadow-lg text-lg font-medium bg-white rounded-box w-52"
               >
                 <li>
-                  <Link href={`/profile/${user.name}`}>Profile</Link>
+                  <Link
+                    href={`/profile/${user.name}`}
+                    className="hover:bg-gray-100"
+                  >
+                    Profile
+                  </Link>
                 </li>
                 <li>
-                  <Link href={`/projects/add`}>Add Project</Link>
+                  <Link href={`/projects/add`} className="hover:bg-gray-100">
+                    Add Project
+                  </Link>
                 </li>
                 <li>
                   <LogoutButton />
@@ -171,10 +181,90 @@ const Navbar: React.FC = () => {
               </ul>
             </div>
           ) : (
-            <Link href="/auth/login">Log in</Link>
+            <Link
+              href="/auth/login"
+              className="px-6 py-2 rounded-full bg-teal-500 text-white font-semibold shadow-lg hover:shadow-xl hover:bg-teal-600 transition duration-300"
+            >
+              Log in
+            </Link>
           )}
         </div>
       </div>
+
+      {/* Мобильное меню (бургер) */}
+      <div className="md:hidden flex items-center">
+        <button
+          className="text-gray-800 p-2 hover:bg-gray-100 rounded-md focus:outline-none"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {menuOpen && (
+        <div className="absolute top-0 left-0 w-full bg-white shadow-lg p-4 space-y-4 text-lg font-medium">
+          <Link
+            href="/"
+            className="block text-indigo-400 hover:text-indigo-600"
+          >
+            Home
+          </Link>
+          <Link
+            href="/projects"
+            className="block text-orange-600 hover:text-orange-800"
+          >
+            Projects
+          </Link>
+          <Link
+            href="/about"
+            className="block text-yellow-500 hover:text-yellow-600"
+          >
+            About
+          </Link>
+          {user && (
+            <Link
+              href="/chat"
+              className="block text-teal-600 hover:text-teal-800"
+            >
+              Messages
+            </Link>
+          )}
+          {user ? (
+            <Link
+              href={`/profile/${user.name}`}
+              className="block text-gray-800 hover:text-gray-600"
+            >
+              Profile
+            </Link>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="block text-teal-500 hover:text-teal-600"
+            >
+              Log in
+            </Link>
+          )}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-gray-500 hover:text-gray-600"
+          >
+            Close
+          </button>
+        </div>
+      )}
     </nav>
   );
 };

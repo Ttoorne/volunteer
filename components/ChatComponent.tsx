@@ -52,7 +52,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           body: JSON.stringify({ messageIds }),
         });
       } catch (error) {
-        console.error("Ошибка обновления isRead:", error);
+        console.error("Error updating isRead:", error);
       }
     },
     [token]
@@ -145,7 +145,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         console.error(data.error);
       }
     } catch (error) {
-      console.error("Ошибка отправки сообщения:", error);
+      console.error("Error sending messages:", error);
     }
   };
 
@@ -247,12 +247,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
               {groupedMessages[date].map((msg) => (
                 <div
                   key={`${msg._id}-${chatId}-${date}`}
-                  className={`flex ${
-                    msg.senderId === userId ? "justify-end" : "justify-start"
-                  } mb-4`}
+                  className={`chat ${
+                    msg.senderId === userId ? "chat-end" : "chat-start"
+                  }`}
                 >
                   <div
-                    className={`max-w-[75%] p-3 rounded-lg ${
+                    className={`chat-bubble hover:scale-110 max-w-[75%] p-3 rounded-lg ${
                       msg.senderId === userId
                         ? "bg-blue-800 text-white"
                         : "bg-gray-100 text-black"
