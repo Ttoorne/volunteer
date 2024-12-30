@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${montserrat.className} min-h-screen bg-white text-textColor flex flex-col`}
       >
-        <LoadingScreen />
+        {/* <LoadingScreen /> */}
         <Navbar />
         <main className="">{children}</main>
         <Footer />

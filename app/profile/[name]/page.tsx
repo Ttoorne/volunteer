@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import EditUserPage from "@/components/EditUserPage";
+import EditUserPage from "@/components/UserPage/EditUserPage";
 import { fetchUserData } from "@/server/utils/fetchUserData";
 import { api } from "@/hooks/api";
 

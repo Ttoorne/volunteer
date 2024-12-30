@@ -85,8 +85,8 @@ const ChatPage: React.FC = () => {
 
           // Сортировка чатов по дате последнего сообщения
           const sortedChats = chatsData.data.sort((a: any, b: any) => {
-            const lastMessageA = a.messages?.[a.messages.length - 1];
-            const lastMessageB = b.messages?.[b.messages.length - 1];
+            const lastMessageA = a.messages?.[a.messages.length - 1] || null;
+            const lastMessageB = b.messages?.[b.messages.length - 1] || null;
 
             const dateA = lastMessageA
               ? new Date(lastMessageA.createdAt)
@@ -106,6 +106,25 @@ const ChatPage: React.FC = () => {
           });
           const usersData = await usersResponse.json();
           setUsers(usersData);
+
+          // Проверка на наличие chatWithOrganizer в localStorage
+          const chatWithOrganizer = localStorage.getItem("chatWithOrganizer");
+          if (chatWithOrganizer) {
+            const organizer = JSON.parse(chatWithOrganizer);
+            // Найдем чат с этим организатором
+            const existingChat = sortedChats.find((chat: any) =>
+              chat.participants.some(
+                (participant: any) => participant?._id === organizer._id
+              )
+            );
+
+            if (existingChat) {
+              openChat(existingChat);
+            } else {
+              createChatWithOrganizer(organizer);
+            }
+            localStorage.removeItem("chatWithOrganizer");
+          }
         } catch (error) {
           console.error("Error fetching chats or users:", error);
         }
@@ -113,18 +132,49 @@ const ChatPage: React.FC = () => {
     };
 
     fetchChatsAndUsers();
-  }, [token]);
+  }, [token, activeChat]);
+
+  useEffect(() => {
+    if (activeChat) {
+      const participantId = activeChat.participants.find(
+        (participant: any) => participant?._id !== userId
+      );
+
+      const participant = users.find(
+        (user) => user?._id === participantId?._id
+      );
+      setChatParticipant(participant);
+    }
+  }, [activeChat, users, userId]);
 
   const openChat = (chat: any) => {
     setActiveChat(chat);
+  };
 
-    const participantId = chat.participants.find(
-      (participant: any) => participant._id !== userId
-    );
+  const createChatWithOrganizer = async (organizer: any) => {
+    try {
+      const response = await fetch(`${api}/chats`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: `Чат с ${organizer._id}`,
+          participants: [organizer._id],
+        }),
+      });
 
-    const participant = users.find((user) => user._id === participantId._id);
-
-    setChatParticipant(participant);
+      if (response.ok) {
+        const newChat = await response.json();
+        setChats((prevChats) => [newChat.data, ...prevChats]);
+        openChat(newChat.data);
+      } else {
+        console.error("Failed to create chat");
+      }
+    } catch (error) {
+      console.error("Error creating chat:", error);
+    }
   };
 
   const getUnreadCount = (chat: any) => {
@@ -145,15 +195,16 @@ const ChatPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
       {/* Левая панель: список чатов */}
-      <div className="w-1/3 bg-white p-4 shadow-lg sticky top-0 h-screen border-r-2 border-gray-100">
+      <div className="w-1/3 bg-white p-4 sticky top-0 h-screen border-r-2 border-gray-100">
         <h2 className="text-2xl font-medium mb-4">Chats</h2>
         <ul>
           {chats.map((chat) => {
             const participantId = chat.participants.find(
-              (participant: any) => participant._id !== userId
+              (participant: any) => participant?._id !== userId
             );
+
             const participant = users.find(
-              (user) => user._id === participantId?._id
+              (user) => user?._id === participantId?._id
             );
 
             const lastMessage =

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import EditUserForm from "@/components/EditUserForm";
+import EditUserForm from "@/components/UserPage/EditUserForm";
 import EditSvg from "@/assets/edit.svg";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import { api } from "@/hooks/api";

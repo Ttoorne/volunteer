@@ -135,34 +135,156 @@ input[type="number"]::-webkit-inner-spin-button {
 /* calendar */
 .react-calendar {
   width: 50% !important;
-  max-width: 100%;
-  background: white;
-  border: 1px solid #a0a096;
+  max-width: 100% !important;
+  background: white !important;
+  border: 1px solid #ddd !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
   font-family: "Roboto", sans-serif !important;
-  line-height: 3.125em !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
 }
 
 .react-calendar__tile {
-  padding: 10px 6.6667px;
-  background: none;
-  text-align: center;
-  font-family: "Roboto", sans-serif !important;
+  padding: 12px 10px !important;
+  background: none !important;
+  text-align: center !important;
+  font-family: "Montserrat", sans-serif !important;
   font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #333 !important;
+  border-radius: 8px !important;
+  transition: background 0.3s ease, color 0.3s ease !important;
+}
+
+.react-calendar__tile--active {
+  background: #8ecae6 !important;
+  color: white !important;
+  font-weight: bold !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.react-calendar__tile:hover {
+  background: #dbeeff !important;
+  color: #005f73 !important;
 }
 
 .react-calendar__navigation button {
-  min-width: 44px;
-  background: none;
+  min-width: 44px !important;
+  background: none !important;
   font-size: 18px !important;
   font-family: "Montserrat", sans-serif !important;
+  color: #005f73 !important;
+  font-weight: bold !important;
+  transition: color 0.3s ease !important;
+}
+
+.react-calendar__navigation button:hover {
+  color: #0a9396 !important;
 }
 
 .react-calendar button {
-  margin: 0;
-  border: 0;
-  outline: none;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: none !important;
+  cursor: pointer !important;
 }
 
 .react-calendar__month-view__weekdays__weekday {
-  padding: 0.5em;
+  padding: 0.5em !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  color: #005f73 !important;
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: #b9493f !important;
+}
+
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #bbb !important;
+}
+
+.react-calendar__month-view__days__day--disabled {
+  color: #ddd !important;
+  text-decoration: line-through !important;
+}
+
+.react-calendar__navigation {
+  margin-bottom: 16px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  background: #f6f9fc !important;
+  border-bottom: 1px solid #ddd !important;
+}
+
+.react-calendar__navigation button:disabled {
+  color: #ccc !important;
+}
+
+.react-calendar__navigation button svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: #005f73 !important;
+  transition: stroke 0.3s ease !important;
+  font-weight: 600 !important;
+}
+
+.react-calendar__navigation button:hover svg {
+  stroke: #0a9396 !important;
+}
+
+.react-calendar__tile--past {
+  color: #ddd !important;
+}
+
+.react-calendar__tile--today {
+  background: #38a169 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border-radius: 8px !important;
+}
+
+@media (max-width: 1024px) {
+  .react-calendar {
+    width: 100% !important;
+  }
+
+  .react-calendar__tile {
+    font-size: 14px !important;
+  }
+
+  .react-calendar__navigation button {
+    font-size: 16px !important;
+    min-width: 38px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .react-calendar {
+    width: 100% !important;
+  }
+
+  .react-calendar__tile {
+    font-size: 14px !important;
+    padding: 10px 8px !important;
+  }
+
+  .react-calendar__navigation button {
+    font-size: 16px !important;
+    min-width: 38px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .react-calendar__tile {
+    font-size: 12px !important;
+    padding: 8px 6px !important;
+  }
+
+  .react-calendar__navigation button {
+    font-size: 14px !important;
+    min-width: 32px !important;
+  }
 }

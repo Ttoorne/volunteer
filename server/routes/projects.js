@@ -161,32 +161,52 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
 
     if (Array.isArray(participants)) {
       if (participants.length > 0) {
-        // Удаляем участников из проекта, которых нет в новом списке
-        project.participants = project.participants.filter(
-          (participant) =>
-            !participants.some(
+        const hasUserKey = participants.some((participant) => participant.user);
+        if (hasUserKey) {
+          project.participants = project.participants.filter((participant) =>
+            participants.some(
               (newParticipant) =>
-                newParticipant._id.toString() === participant.user.toString()
+                newParticipant?.user._id.toString() ===
+                participant.user.toString()
             )
-        );
+          );
+        } else {
+          project.participants = project.participants.filter(
+            (participant) =>
+              !participants.some(
+                (newParticipant) =>
+                  participant.user.toString() === newParticipant._id.toString()
+              )
+          );
+        }
 
-        // Добавляем новых участников в проект
         for (let newParticipant of participants) {
           const isAlreadyParticipant = project.participants.some(
-            (participant) =>
-              participant.user.toString() === newParticipant._id.toString()
+            (participant) => {
+              if (newParticipant.user) {
+                return (
+                  newParticipant?.user._id.toString() ===
+                  participant.user.toString()
+                );
+              } else {
+                return (
+                  participant.user.toString() === newParticipant._id.toString()
+                );
+              }
+            }
           );
 
           if (!isAlreadyParticipant) {
             const participant = {
-              user: newParticipant._id,
+              user: newParticipant.user
+                ? newParticipant.user._id
+                : newParticipant._id,
               joinedAt: new Date().toISOString(),
             };
             project.participants.push(participant);
           }
         }
       } else {
-        // Если participants пустой, можно очистить список участников
         project.participants = [];
       }
     }

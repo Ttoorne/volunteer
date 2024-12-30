@@ -76,7 +76,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         <img
           src={getImageUrl(project.images[0])}
           alt="Project image"
-          className="object-cover w-full h-full"
+          className="object-cover w-full h-full hidden md:block"
         />
         <p
           className={`absolute left-4 top-4 text-white font-medium badge p-5 opacity-0 group-hover:opacity-100 ${
@@ -94,15 +94,45 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       </figure>
       <div className="card-body">
         <h2 className="card-title flex gap-3 items-center text-lg lg:text-2xl pt-4">
-          <span>{project.title}</span>
+          <span>
+            {project.title.length > 100
+              ? `${project.title.slice(0, 100)}...`
+              : project.title}
+          </span>
         </h2>
-        <p>
+
+        <p className="block sm:hidden">
+          {project.description.length > 50
+            ? `${project.description.slice(0, 50)}...`
+            : project.description}
+        </p>
+        <p className="hidden sm:block md:hidden">
+          {project.description.length > 70
+            ? `${project.description.slice(0, 70)}...`
+            : project.description}
+        </p>
+        <p className="hidden md:block">
           {project.description.length > 220
             ? `${project.description.slice(0, 220)}...`
             : project.description}
         </p>
+
         <p className="flex items-center gap-1 absolute right-4 top-4 font-medium">
-          <span>{project.location.toUpperCase()}</span>
+          <span className="block sm:hidden">
+            {project.location.length > 30
+              ? `${project.location.slice(0, 30)}...`
+              : project.location}
+          </span>
+          <span className="hidden sm:block md:hidden">
+            {project.location.length > 50
+              ? `${project.location.slice(0, 50)}...`
+              : project.location}
+          </span>
+          <span className="hidden md:block">
+            {project.location.length > 100
+              ? `${project.location.slice(0, 100)}...`
+              : project.location}
+          </span>
           <svg
             className="w-7 h-7"
             version="1.0"

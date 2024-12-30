@@ -75,7 +75,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="relative z-40 py-4 bg-white shadow-lg flex">
+    <nav className="relative z-40 py-4 bg-white border-b-2 border-gray-100 flex">
       <div className="container mx-auto flex items-center justify-between text-gray-800 text-lg font-medium">
         {/* Логотип */}
         <div className="flex items-center">

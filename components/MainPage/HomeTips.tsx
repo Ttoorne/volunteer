@@ -1,6 +1,6 @@
 const HomeTips = () => {
   return (
-    <div className="bg-white p-4 sm:p-6 md:p-8 w-full max-w-4xl mx-auto min-h-[50vh]">
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-4xl mx-auto min-h-[50vh]">
       <div className="space-y-4">
         <div className="collapse bg-white rounded-lg shadow-md p-3">
           <input type="checkbox" className="peer" />

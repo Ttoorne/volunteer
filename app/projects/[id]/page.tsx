@@ -7,8 +7,8 @@ import { fetchUserData } from "@/server/utils/fetchUserData";
 import { api } from "@/hooks/api";
 
 import Alert from "@/components/Alert";
-import ProjectEditModal from "@/components/ProjectEditModal";
-import GenerateBackground from "@/components/GenerateBackground";
+import ProjectEditModal from "@/components/ProjectPage/ProjectEditModal";
+import GenerateBackground from "@/components/ProjectPage/GenerateBackground";
 import Link from "next/link";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import Image from "next/image";
@@ -24,6 +24,7 @@ interface CurrentUser {
 }
 
 interface Organizer {
+  _id: string;
   name: string;
   email: string;
 }
@@ -37,6 +38,7 @@ interface Project {
   title: string;
   description: string;
   organizer?: Organizer;
+  status: string;
   location: string;
   startDate: string;
   endDate?: string;
@@ -57,6 +59,7 @@ const ProjectPage = () => {
   } | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState<boolean>(false);
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
+  const [organizer, setOrganizer] = useState<Organizer | undefined>(undefined);
 
   const background = GenerateBackground();
 
@@ -107,6 +110,7 @@ const ProjectPage = () => {
 
       const data: Project = await response.json();
       setProject(data);
+      setOrganizer(data?.organizer);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred";
@@ -224,6 +228,7 @@ const ProjectPage = () => {
     window.location.href = "/projects";
   };
 
+  console.log(project);
   const handleLeaveProject = async () => {
     if (!currentUser || !id) return;
 
@@ -255,7 +260,7 @@ const ProjectPage = () => {
   };
 
   const isUserParticipant = project?.participants.some(
-    (participant) => participant.user._id === currentUser?._id
+    (participant) => participant?.user?._id === currentUser?._id
   );
 
   if (loading) {
@@ -309,12 +314,56 @@ const ProjectPage = () => {
           <h1 className="text-4xl lg:text-6xl font-bold mt-4 mb-6 tracking-wide">
             {project?.title}
           </h1>
-          <p className="text-xl font-semibold">
-            Organized by:{" "}
-            <span className="font-semibold text-lg text-gray-200">
-              {project?.organizer?.name || "Unknown"}
-            </span>
-          </p>
+          <div className="text-xl font-semibold flex justify-between items-center">
+            <div>
+              <span>Organized by: </span>
+              <Link
+                href={`profile/${project?.organizer?.name}`}
+                className="font-semibold text-gray-200 hover:text-gray-300 transition duration-200 ease-in-out "
+              >
+                {organizer?.name || "Unknown"}
+              </Link>
+            </div>
+            {project?.organizer?.name !== currentUser?.name && currentUser ? (
+              <Link
+                href="/chat"
+                onClick={() => {
+                  if (organizer) {
+                    localStorage.setItem(
+                      "chatWithOrganizer",
+                      JSON.stringify(organizer)
+                    );
+                  }
+                }}
+                className="ml-auto flex items-center gap-2 bg-white px-5 py-2 text-indigo-900 rounded-full duration-200 hover:scale-105"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-7 h-7"
+                >
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g
+                    id="SVGRepo_tracerCarrier"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></g>
+                  <g id="SVGRepo_iconCarrier">
+                    {" "}
+                    <path
+                      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22Z"
+                      stroke="#312e81"
+                      strokeWidth="1.5"
+                    ></path>{" "}
+                  </g>
+                </svg>
+                <p className="text-lg">Message the organizer</p>
+              </Link>
+            ) : (
+              <></>
+            )}
+          </div>
           {/* Edit Modal Section */}
           {project?.organizer?.name === currentUser?.name && (
             <div className="absolute bottom-4 right-4 flex gap-4">
@@ -334,7 +383,7 @@ const ProjectPage = () => {
           )}
 
           <div className="absolute top-4 right-4">
-            <span className="px-5 py-2 bg-white text-indigo-700 text-md font-bold rounded-full shadow-md">
+            <span className="px-5 py-2 bg-white text-indigo-800 text-md font-bold rounded-full shadow-md">
               {formattedStartDate}
             </span>
           </div>
@@ -366,14 +415,14 @@ const ProjectPage = () => {
           {/* Participants Section */}
           <div>
             <h3 className="font-semibold text-gray-900 text-2xl mb-6">
-              Participants
+              Participants ({`${project?.participants.length}`})
             </h3>
-            <div className="flex flex-wrap gap-4">
+            <div className="carousel rounded-box flex flex-wrap gap-4">
               {project?.participants.map((participant) => (
                 <Link
                   href={`/profile/${participant.user.name}`}
                   key={participant.user._id}
-                  className="flex flex-col items-center bg-white rounded-lg border border-gray-200 shadow-md p-4 w-48 hover:shadow-xl transition-shadow "
+                  className="carousel-item flex flex-col items-center bg-white rounded-lg border border-gray-200 shadow-md p-4 w-48 hover:shadow-xl transition-shadow "
                 >
                   <div className="w-20 h-20 mb-4">
                     <img
@@ -396,23 +445,27 @@ const ProjectPage = () => {
                 </Link>
               ))}
             </div>
-            {project?.organizer?.name !== currentUser?.name &&
-              currentUser &&
-              !isUserParticipant && (
-                <button
-                  onClick={handleJoinProject}
-                  className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
-                >
-                  Join Project
-                </button>
-              )}
-            {isUserParticipant && currentUser && (
-              <button
-                onClick={handleLeaveProject}
-                className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
-              >
-                Leave Project
-              </button>
+            {project?.status === "open" && (
+              <>
+                {project?.organizer?.name !== currentUser?.name &&
+                  currentUser &&
+                  !isUserParticipant && (
+                    <button
+                      onClick={handleJoinProject}
+                      className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
+                    >
+                      Join Project
+                    </button>
+                  )}
+                {isUserParticipant && currentUser && (
+                  <button
+                    onClick={handleLeaveProject}
+                    className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
+                  >
+                    Leave Project
+                  </button>
+                )}
+              </>
             )}
           </div>
 

@@ -5,7 +5,7 @@ import HomeTips from "@/components/MainPage/HomeTips";
 import { api } from "@/hooks/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import tipsImg from "@/assets/main_page__tips.gif";
+import tipsImg from "@/assets/main__page_tips.gif";
 import Image from "next/image";
 import HomeImpact from "@/components/MainPage/HomeImpact";
 import HomeFaq from "@/components/MainPage/HomeFaq";
@@ -113,7 +113,7 @@ const MainPage = () => {
   }, [projects]);
 
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-16 bg-indigo-50">
       {/* Header section */}
       <section
         className="relative w-full flex flex-col md:flex-row gap-10 p-5 md:p-10 mt-0 items-center bg-cover bg-opacity-50 backdrop-blur-lg min-h-[90vh]"
@@ -176,56 +176,72 @@ const MainPage = () => {
           Active Projects
         </h2>
         <div className="relative flex items-center px-4 sm:px-5 lg:px-5">
-          <button
-            className="absolute left-[-30px] top-1/2 transform -translate-y-1/2 z-10 bg-gray-700 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg hover:bg-gray-800 transition text-2xl sm:text-3xl"
-            onClick={() => {
-              const carousel = document.querySelector(".carousel");
-              carousel?.scrollBy({ left: -300, behavior: "smooth" });
-            }}
-          >
-            ‹
-          </button>
-
-          {/* Carousel */}
-          {loadingProjects ? (
-            <div className="loading loading-spinner loading-lg text-primary mx-auto"></div>
-          ) : (
-            <div className="carousel rounded-box flex justify-start overflow-x-scroll scrollbar-hide py-5 space-x-4 sm:space-x-6 lg:space-x-8">
-              {filteredProjects.slice(0, 9).map((project) => (
-                <HomeProjectCard key={project._id} project={project} />
-              ))}
-              <div className="flex items-center justify-center">
-                <Link
-                  href="/projects"
-                  className="flex flex-col gap-2 rounded-full p-4 sm:p-6 lg:p-8 hover:bg-gray-100 transition"
-                >
-                  <span className="text-gray-800 text-lg sm:text-xl">
-                    View All Projects
-                  </span>
-                  <span className="rounded-full text-xl sm:text-2xl bg-gray-800 text-white flex items-center justify-center">
-                    →
-                  </span>
-                </Link>
-              </div>
+          {filteredProjects.length === 0 ? (
+            <div className="text-center py-10 mx-auto">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
+                No active projects at the moment.
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base mt-2">
+                Check back later for new opportunities.
+              </p>
             </div>
-          )}
+          ) : (
+            <>
+              <button
+                className="absolute left-[-30px] top-1/2 transform -translate-y-1/2 z-10 bg-gray-700 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg hover:bg-gray-800 transition text-2xl sm:text-3xl"
+                onClick={() => {
+                  const carousel = document.querySelector(".carousel");
+                  carousel?.scrollBy({ left: -300, behavior: "smooth" });
+                }}
+              >
+                ‹
+              </button>
 
-          <button
-            className="absolute right-[-30px] top-1/2 transform -translate-y-1/2 z-10 bg-gray-700 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex justify-center items-center shadow-lg hover:bg-gray-800 transition text-2xl sm:text-3xl"
-            onClick={() => {
-              const carousel = document.querySelector(".carousel");
-              carousel?.scrollBy({ left: 300, behavior: "smooth" });
-            }}
-          >
-            ›
-          </button>
+              {/* Carousel */}
+              {loadingProjects ? (
+                <div className="loading loading-spinner loading-lg text-primary mx-auto"></div>
+              ) : (
+                <div className="carousel rounded-box flex justify-start overflow-x-scroll scrollbar-hide py-5 space-x-4 sm:space-x-6 lg:space-x-8">
+                  {filteredProjects.slice(0, 9).map((project) => (
+                    <HomeProjectCard key={project._id} project={project} />
+                  ))}
+                  <div className="flex items-center justify-center">
+                    <Link
+                      href="/projects"
+                      className="flex flex-col gap-2 rounded-full p-4 sm:p-6 lg:p-8 hover:bg-gray-100 transition"
+                    >
+                      <span className="text-gray-800 text-lg sm:text-xl">
+                        View All Projects
+                      </span>
+                      <span className="rounded-full text-xl sm:text-2xl bg-gray-800 text-white flex items-center justify-center">
+                        →
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              <button
+                className="absolute right-[-30px] top-1/2 transform -translate-y-1/2 z-10 bg-gray-700 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex justify-center items-center shadow-lg hover:bg-gray-800 transition text-2xl sm:text-3xl"
+                onClick={() => {
+                  const carousel = document.querySelector(".carousel");
+                  carousel?.scrollBy({ left: 300, behavior: "smooth" });
+                }}
+              >
+                ›
+              </button>
+            </>
+          )}
         </div>
       </section>
 
       {/* Calendar section */}
       <section className="mt-6 px-10">
-        <h2 className="text-3xl font-medium mb-3 ml-16">Upcoming Events</h2>
-        <div className="bg-white p-5 pt-8">
+        <h2 className="text-3xl font-semibold ml-4 sm:ml-8 lg:ml-16">
+          Upcoming Events
+        </h2>
+
+        <div className="p-5">
           <p className="text-gray-600 ml-7 text-base">
             Here you can view upcoming events and sign up for volunteering
             opportunities.
@@ -257,12 +273,13 @@ const MainPage = () => {
         <h2 className="text-2xl font-semibold mb-4 text-center">
           Impact Overview
         </h2>
+
         <HomeImpact />
       </section>
 
       {/* FAQ Section */}
-      <section className="mt-6 px-10">
-        <h2 className="text-3xl font-medium mb-4 ml-7">
+      <section className="mt-6">
+        <h2 className="text-3xl font-medium ml-7 lg:ml-14">
           Frequently Asked Questions
         </h2>
 

@@ -221,7 +221,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-    console.log(messagesEndRef);
   }, [messages]);
 
   // Группируем сообщения по датам

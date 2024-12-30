@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    joinedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
+    joinedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
     hoursVolunteered: { type: Number, default: 0 },
     projectsCount: { type: Number, default: 0 },
     bio: { type: String, maxlength: 150, default: "" },
