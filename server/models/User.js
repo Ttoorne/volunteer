@@ -68,7 +68,17 @@ const userSchema = new mongoose.Schema(
     },
     reviews: [
       {
-        author: { type: String },
+        author: {
+          _id: { type: String },
+          name: { type: String },
+          avatar: { type: String },
+        },
+        rating: {
+          type: Number,
+          default: 0,
+          min: [0, "Rating must be at least 0"],
+          max: [5, "Rating cannot exceed 5"],
+        },
         text: { type: String },
         createdAt: { type: Date, default: Date.now },
       },
@@ -85,7 +95,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Middleware для хэширования пароля перед сохранением
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   try {
@@ -98,7 +107,6 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// Метод для сравнения пароля
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

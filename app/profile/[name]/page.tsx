@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import EditUserPage from "@/components/UserPage/EditUserPage";
 import { fetchUserData } from "@/server/utils/fetchUserData";
 import { api } from "@/hooks/api";
+import userBg from "@/assets/user__background.jpg";
 
 const fetchUserDataName = async (name: string) => {
   const response = await fetch(`${api}/auth/users/${name}`, {
@@ -32,21 +33,23 @@ const ProfilePage = async ({ params }: { params: { name: string } }) => {
     const userData = await fetchUserDataName(params.name);
 
     return (
-      <div
-        className="bg-gray-200 pt-10 pb-16"
-        style={{
-          minHeight: "100vh",
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${"https://png.pngtree.com/background/20210716/original/pngtree-graffiti-pen-touch-abstract-brush-background-picture-image_1355227.jpg"})`,
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundAttachment: "fixed",
-        }}
-      >
+      <div className="bg-gray-200 pt-10 pb-16 relative">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            minHeight: "100vh",
+            backgroundImage: `url(${userBg.src})`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+            filter: "blur(5px) brightness(0.8)",
+          }}
+        ></div>
         <EditUserPage
           userData={userData}
           token={token}
-          currentUserName={currentUser?.name || null}
+          currentUser={currentUser || null}
         />
       </div>
     );

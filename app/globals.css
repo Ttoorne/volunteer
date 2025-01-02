@@ -132,6 +132,29 @@ input[type="number"]::-webkit-inner-spin-button {
   }
 }
 
+.modal-overlay {
+  margin-top: 0 !important;
+  z-index: 100;
+}
+
+.alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.alert.hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-20px);
+}
+
 /* calendar */
 .react-calendar {
   width: 50% !important;

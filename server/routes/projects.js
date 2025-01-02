@@ -1,5 +1,6 @@
 const express = require("express");
 const Project = require("../models/Project");
+const User = require("../models/User");
 const router = express.Router();
 const multer = require("multer");
 const ProjectImage = require("../models/ProjectImage");
@@ -100,11 +101,9 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate("organizer", "name email")
-      .populate(
-        "participants.user",
-        "name email _id firstName lastName avatar"
-      );
+      .populate("organizer", "_id name email")
+      .populate("participants.user", "name email _id firstName lastName avatar")
+      .populate("reviews.user", "name email _id firstName lastName avatar");
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
@@ -123,6 +122,7 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
   try {
     const { participants, ...updateFields } = req.body;
 
+    // Находим проект по ID
     const project = await Project.findById(req.params.id);
 
     if (!project) {
@@ -139,10 +139,10 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
           .json({ message: "You can upload up to 6 images" });
       }
 
-      // Удаляем старые изображения из базы данных
+      // Удаляем старые изображения
       await ProjectImage.deleteMany({ _id: { $in: images } });
 
-      // Сохраняем новые изображения в базе данных
+      // Загружаем новые изображения
       const newImages = await Promise.all(
         req.files.map(async (file) => {
           const newImage = new ProjectImage({
@@ -155,13 +155,32 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
         })
       );
 
-      // Обновляем массив изображений новыми
       images = newImages;
     }
 
+    // Обрабатываем участников
     if (Array.isArray(participants)) {
+      // Сначала удаляем всех старых участников из joinedEvents
+      for (let participant of project.participants) {
+        try {
+          await User.findByIdAndUpdate(
+            participant.user,
+            { $pull: { joinedEvents: project._id } },
+            { new: true }
+          );
+        } catch (err) {
+          console.error(
+            `Failed to remove project for user ${participant.user}:`,
+            err
+          );
+        }
+      }
+
+      // Если есть новые участники
       if (participants.length > 0) {
         const hasUserKey = participants.some((participant) => participant.user);
+
+        // Обновляем участников в проекте
         if (hasUserKey) {
           project.participants = project.participants.filter((participant) =>
             participants.some(
@@ -180,6 +199,7 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
           );
         }
 
+        // Добавляем новых участников
         for (let newParticipant of participants) {
           const isAlreadyParticipant = project.participants.some(
             (participant) => {
@@ -204,9 +224,18 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
               joinedAt: new Date().toISOString(),
             };
             project.participants.push(participant);
+            const userEvent = await User.findById(participant.user);
+            if (userEvent) {
+              await User.findByIdAndUpdate(
+                participant.user,
+                { $addToSet: { joinedEvents: project._id } },
+                { new: true }
+              );
+            }
           }
         }
       } else {
+        // Если участников не осталось, очищаем список
         project.participants = [];
       }
     }
@@ -219,14 +248,16 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
       project[key] = updateFields[key];
     });
 
-    // Обновляем список изображений
+    // Обновляем изображения проекта
     project.images = images;
 
+    // Заполняем данные участников
     await project.populate(
       "participants.user",
       "_id name email firstName lastName avatar"
     );
 
+    // Сохраняем проект
     await project.save();
 
     res.status(200).json({
@@ -268,6 +299,151 @@ router.patch("/:id/status", async (req, res) => {
     console.error("Error updating status:", error);
     res.status(500).json({
       message: "Error updating status",
+      error: error.message,
+    });
+  }
+});
+
+// ?? Project Review
+// Получение отзывов по ID проекта
+router.get("/:id/reviews", async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id).populate(
+      "reviews.user",
+      "name email _id firstName lastName avatar"
+    );
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    res.status(200).json({
+      message: "Reviews fetched successfully",
+      reviews: project.reviews,
+    });
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    res.status(500).json({
+      message: "Error fetching reviews",
+      error: error.message,
+    });
+  }
+});
+
+// Добавление отзыва к проекту по ID
+router.post("/:id/reviews", async (req, res) => {
+  try {
+    const { rating, comment, user } = req.body;
+    const project = await Project.findById(req.params.id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (!rating || rating < 0 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 0 and 5" });
+    }
+
+    const newReview = {
+      user,
+      rating,
+      comment,
+      createdAt: new Date(),
+    };
+
+    project.reviews.push(newReview);
+    await project.save();
+
+    res.status(201).json({
+      message: "Review added successfully",
+      review: newReview,
+    });
+  } catch (error) {
+    console.error("Error adding review:", error);
+    res.status(500).json({
+      message: "Error adding review",
+      error: error.message,
+    });
+  }
+});
+
+// Изменение отзыва по ID проекта и ID отзыва
+router.put("/:id/reviews/:reviewId", async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+    const { rating, comment } = req.body;
+
+    const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const review = project.reviews.find(
+      (review) => review._id.toString() === reviewId
+    );
+
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    // Проверяем корректность рейтинга
+    if (rating && (rating < 0 || rating > 5)) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 0 and 5" });
+    }
+
+    // Обновляем отзыв
+    if (rating !== undefined) review.rating = rating;
+    if (comment !== undefined) review.comment = comment;
+
+    review.updatedAt = new Date();
+    await project.save();
+
+    res.status(200).json({
+      message: "Review updated successfully",
+      review,
+    });
+  } catch (error) {
+    console.error("Error updating review:", error);
+    res.status(500).json({
+      message: "Error updating review",
+      error: error.message,
+    });
+  }
+});
+
+// Удаление отзыва по ID проекта и ID отзыва
+router.delete("/:id/reviews/:reviewId", async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+
+    const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const reviewIndex = project.reviews.findIndex(
+      (review) => review._id.toString() === reviewId
+    );
+
+    if (reviewIndex === -1) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    // Удаляем отзыв
+    project.reviews.splice(reviewIndex, 1);
+    await project.save();
+
+    res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    res.status(500).json({
+      message: "Error deleting review",
       error: error.message,
     });
   }

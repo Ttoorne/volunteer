@@ -4,11 +4,16 @@ import EditUserForm from "@/components/UserPage/EditUserForm";
 import EditSvg from "@/assets/edit.svg";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import { api } from "@/hooks/api";
+import Link from "next/link";
+import UserReviews from "./UserReviews";
+import ConfirmationModal from "../ConfirmationModal";
 
 interface Review {
-  author: string;
+  _id: string;
+  author: { _id: string; name: string; avatar: string };
   text: string;
   createdAt: string;
+  rating: number;
 }
 
 interface UserProfile {
@@ -30,23 +35,30 @@ interface UserProfile {
   projectsCount: number;
 }
 
+interface CurrentUser {
+  _id: string;
+  avatar: string;
+  name: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 interface EditUserPageProps {
   userData: UserProfile;
   token: string | undefined;
-  currentUserName: string | null;
+  currentUser: CurrentUser | null;
 }
 
-const EditUserPage = ({
-  userData,
-  token,
-  currentUserName,
-}: EditUserPageProps) => {
+const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
   const [profileData, setProfileData] = useState(userData);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [loadingAvatar, setLoadingAvatar] = useState(true);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   useEffect(() => {
     const loadAvatar = async () => {
@@ -121,13 +133,13 @@ const EditUserPage = ({
     window.location.reload();
   };
 
-  const isOwner = currentUserName === userData.name;
+  const isOwner = currentUser?.name === userData.name;
 
   const deleteUser = async () => {
-    if (!window.confirm("Are you sure you want to delete your account?")) {
-      return;
-    }
+    setIsConfirmModalOpen(true);
+  };
 
+  const confirmDeleteUser = async () => {
     try {
       const response = await fetch(`${api}/auth/users/delete/${userData._id}`, {
         method: "DELETE",
@@ -146,11 +158,22 @@ const EditUserPage = ({
     } catch (error) {
       console.error("Error deleting account:", error);
       alert(error || "An error occurred while deleting the account.");
+    } finally {
+      setIsConfirmModalOpen(false);
     }
   };
 
+  console.log(userData.joinedEvents);
+
   return (
-    <div className="p-6 gap-10 flex flex-col w-11/12 m-auto">
+    <div className="z-10 relative p-6 gap-10 flex flex-col w-11/12 m-auto">
+      {isConfirmModalOpen && (
+        <ConfirmationModal
+          message="Are you sure you want to delete your account?"
+          onConfirm={confirmDeleteUser}
+          onCancel={() => setIsConfirmModalOpen(false)}
+        />
+      )}
       {/* Personal Info */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white">
         <div className="flex justify-between">
@@ -196,6 +219,43 @@ const EditUserPage = ({
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white ">
         <div className="flex justify-between">
           <h2 className="text-base m:text-lg lg:text-xl">Contact Info</h2>
+          {profileData?.name !== currentUser?.name && currentUser ? (
+            <Link
+              href="/chat"
+              onClick={() => {
+                if (profileData?.name) {
+                  // Условие проверки, чтобы profileData содержал имя
+                  localStorage.setItem(
+                    "chatWithOrganizer",
+                    JSON.stringify(profileData)
+                  );
+                }
+              }}
+              className="ml-auto flex items-center gap-2 bg-white px-5 py-2 text-indigo-900 rounded-full duration-200 hover:scale-105"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-7 h-7"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22Z"
+                    stroke="#312e81"
+                    strokeWidth="1.5"
+                  ></path>
+                </g>
+              </svg>
+              <p className="text-lg">Message</p>
+            </Link>
+          ) : null}
           {isOwner && (
             <div
               className="flex gap-1 items-center cursor-pointer transition-transform hover:scale-110 hover:transition-transform"
@@ -248,19 +308,11 @@ const EditUserPage = ({
       </div>
 
       {/* Reviews */}
-      <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white ">
-        <div className="flex justify-between">
-          <h2 className="text-base m:text-lg lg:text-xl">Reviews</h2>
-        </div>
-        <div className="divider m-0"></div>
-        <div>
-          {profileData.reviews.map((review, index) => (
-            <p key={index}>
-              <strong>{review.author}:</strong> {review.text}
-            </p>
-          ))}
-        </div>
-      </div>
+      <UserReviews
+        userName={profileData?.name}
+        currentUser={currentUser}
+        token={token}
+      />
 
       {isOwner && (
         <button

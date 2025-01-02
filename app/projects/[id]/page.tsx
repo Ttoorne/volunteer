@@ -12,6 +12,7 @@ import GenerateBackground from "@/components/ProjectPage/GenerateBackground";
 import Link from "next/link";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import Image from "next/image";
+import ProjectReviews from "@/components/ProjectPage/ProjectReviews";
 
 interface CurrentUser {
   _id: string;
@@ -33,6 +34,14 @@ interface Participant {
   user: CurrentUser;
 }
 
+interface Review {
+  user: CurrentUser;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  _id: string;
+}
+
 interface Project {
   _id: string;
   title: string;
@@ -44,6 +53,7 @@ interface Project {
   endDate?: string;
   images: string[];
   participants: Participant[];
+  reviews: Review[];
 }
 
 const ProjectPage = () => {
@@ -209,7 +219,6 @@ const ProjectPage = () => {
       }
 
       const result = await response.json();
-      console.log("Project deleted successfully:", result.message);
       alert("Project deleted successfully!");
       return result;
     } catch (error: any) {
@@ -228,7 +237,6 @@ const ProjectPage = () => {
     window.location.href = "/projects";
   };
 
-  console.log(project);
   const handleLeaveProject = async () => {
     if (!currentUser || !id) return;
 
@@ -318,7 +326,7 @@ const ProjectPage = () => {
             <div>
               <span>Organized by: </span>
               <Link
-                href={`profile/${project?.organizer?.name}`}
+                href={`/profile/${project?.organizer?.name}`}
                 className="font-semibold text-gray-200 hover:text-gray-300 transition duration-200 ease-in-out "
               >
                 {organizer?.name || "Unknown"}
@@ -445,7 +453,7 @@ const ProjectPage = () => {
                 </Link>
               ))}
             </div>
-            {project?.status === "open" && (
+            {project?.status !== "completed" && (
               <>
                 {project?.organizer?.name !== currentUser?.name &&
                   currentUser &&
@@ -454,7 +462,7 @@ const ProjectPage = () => {
                       onClick={handleJoinProject}
                       className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
                     >
-                      Join Project
+                      Join Event
                     </button>
                   )}
                 {isUserParticipant && currentUser && (
@@ -462,7 +470,7 @@ const ProjectPage = () => {
                     onClick={handleLeaveProject}
                     className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
                   >
-                    Leave Project
+                    Leave Event
                   </button>
                 )}
               </>
@@ -504,6 +512,8 @@ const ProjectPage = () => {
             )}
           </div>
         </div>
+
+        <ProjectReviews project={project} currentUser={currentUser} />
 
         {/* Footer Section */}
         <div className="bg-gray-50 p-8 text-center border-t border-gray-200">

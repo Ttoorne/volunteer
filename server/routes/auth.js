@@ -481,6 +481,236 @@ router.put("/users/:name", upload.single("avatar"), async (req, res) => {
   }
 });
 
+// ?? UserPage Reviews
+router.get("/users/:name/reviews", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    // Найти пользователя по имени
+    const user = await User.findOne({ name })
+      .populate({
+        path: "reviews.author._id",
+        select: "name avatar ",
+      })
+      .populate("createdAt");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.status(200).json({
+      message: "Reviews fetched successfully.",
+      reviews: user.reviews,
+    });
+  } catch (err) {
+    console.error("Error fetching reviews:", err);
+    res.status(500).json({ error: "Failed to fetch reviews." });
+  }
+});
+
+// POST: post review
+router.post("/users/:name/reviews", async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided." });
+    }
+
+    const token = authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const { name } = req.params;
+    const { text, rating } = req.body;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: "Review text cannot be empty." });
+    }
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5." });
+    }
+
+    const reviewedUser = await User.findOne({ name });
+    if (!reviewedUser) {
+      return res.status(404).json({ error: "Reviewed user not found." });
+    }
+
+    // Проверка на наличие существующего отзыва
+    const existingReview = reviewedUser.reviews.find(
+      (review) => review.author._id.toString() === user._id.toString()
+    );
+    if (existingReview) {
+      return res
+        .status(400)
+        .json({ error: "You have already left a review for this user." });
+    }
+
+    // Добавление нового отзыва
+    const newReview = {
+      author: {
+        _id: user._id,
+        name: user.name,
+        avatar: user.avatar,
+      },
+      text: text.trim(),
+      rating,
+    };
+
+    reviewedUser.reviews.push(newReview);
+
+    // Обновление рейтинга пользователя
+    const totalReviews = reviewedUser.reviews.length;
+    reviewedUser.rating =
+      reviewedUser.reviews.reduce(
+        (sum, review) => sum + (review.rating || 0),
+        0
+      ) / totalReviews;
+
+    await reviewedUser.save();
+
+    res.status(201).json({
+      message: "Review added successfully.",
+      review: newReview,
+    });
+  } catch (err) {
+    console.error("Error adding review:", err);
+    res.status(500).json({ error: "Failed to add review." });
+  }
+});
+
+// PUT: update review
+router.put("/users/:name/reviews/:reviewId", async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided." });
+    }
+
+    const token = authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const { name, reviewId } = req.params;
+    const { text, rating } = req.body;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: "Review text cannot be empty." });
+    }
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5." });
+    }
+
+    const reviewedUser = await User.findOne({ name });
+    if (!reviewedUser) {
+      return res.status(404).json({ error: "Reviewed user not found." });
+    }
+
+    const reviewIndex = reviewedUser.reviews.findIndex(
+      (review) => review._id.toString() === reviewId
+    );
+
+    if (reviewIndex === -1) {
+      return res.status(404).json({ error: "Review not found." });
+    }
+
+    const reviewToUpdate = reviewedUser.reviews[reviewIndex];
+
+    if (reviewToUpdate.author._id.toString() !== user._id.toString()) {
+      return res
+        .status(403)
+        .json({ error: "You can only edit your own review." });
+    }
+
+    // Обновляем отзыв
+    reviewToUpdate.text = text.trim();
+    reviewToUpdate.rating = rating;
+
+    // Пересчитываем рейтинг пользователя
+    const totalReviews = reviewedUser.reviews.length;
+    reviewedUser.rating =
+      totalReviews > 0
+        ? reviewedUser.reviews.reduce(
+            (sum, review) => sum + (review.rating || 0),
+            0
+          ) / totalReviews
+        : 0;
+
+    await reviewedUser.save();
+
+    res.status(200).json({
+      message: "Review updated successfully.",
+      review: reviewToUpdate,
+    });
+  } catch (err) {
+    console.error("Error updating review:", err);
+    res.status(500).json({ error: "Failed to update review." });
+  }
+});
+
+// DELETE: delete review
+router.delete("/users/:name/reviews/:reviewId", async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided." });
+    }
+
+    const token = authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const { name, reviewId } = req.params;
+
+    const reviewedUser = await User.findOne({ name });
+    if (!reviewedUser) {
+      return res.status(404).json({ error: "Reviewed user not found." });
+    }
+
+    // Поиск отзыва, который нужно удалить
+    const reviewIndex = reviewedUser.reviews.findIndex(
+      (review) => review._id.toString() === reviewId
+    );
+
+    if (reviewIndex === -1) {
+      return res.status(404).json({ error: "Review not found." });
+    }
+
+    // Удаляем отзыв
+    reviewedUser.reviews.splice(reviewIndex, 1);
+
+    // Пересчитываем рейтинг
+    const totalReviews = reviewedUser.reviews.length;
+    reviewedUser.rating =
+      totalReviews > 0
+        ? reviewedUser.reviews.reduce(
+            (sum, review) => sum + (review.rating || 0),
+            0
+          ) / totalReviews
+        : 0;
+
+    await reviewedUser.save();
+
+    res.status(200).json({ message: "Review deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting review:", err);
+    res.status(500).json({ error: "Failed to delete review." });
+  }
+});
+
 // !! DELETE
 router.delete("/users/delete/:id", async (req, res) => {
   try {

@@ -71,12 +71,13 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
             <select
               value={filters.status}
               onChange={(e) => onFilterChange("status", e.target.value)}
-              className={`w-full p-4 pl-5 pr-10 text-center font-medium border rounded-full bg-white focus:ring-2 focus:outline-none shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 appearance-none
-        ${
-          filters.status === "open"
-            ? "bg-success border-transparent text-white"
-            : ""
-        }
+              className={`w-full p-4 pl-5 pr-10 text-center font-medium border rounded-full focus:ring-2 focus:outline-none shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 appearance-none
+        ${filters.status === "all" ? "bg-white" : ""}
+                ${
+                  filters.status === "open"
+                    ? "bg-success border-transparent text-white"
+                    : ""
+                }
         ${
           filters.status === "completed"
             ? "bg-primary border-transparent text-white"
