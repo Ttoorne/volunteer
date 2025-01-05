@@ -8,6 +8,7 @@ interface ProjectEditModalProps {
   project: any;
   onClose: () => void;
   onUpdate: (updatedProject: any) => void;
+  setRefresh: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 type ProjectData = {
@@ -23,6 +24,7 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
   project,
   onClose,
   onUpdate,
+  setRefresh,
 }) => {
   const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState<null | {
@@ -156,9 +158,8 @@ const ProjectEditModal: React.FC<ProjectEditModalProps> = ({
         type: "success",
         message: "Project successfully edited!",
       });
-
+      setRefresh((prev) => !prev);
       onClose();
-      window.location.reload();
     } catch (error) {
       setLoading(false);
       setAlertData({ type: "error", message: `${error}` });

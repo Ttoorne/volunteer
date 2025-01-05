@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Project = require("../models/Project");
 const PendingUser = require("../models/PendingUser");
 const sendEmail = require("../utils/sendEmail");
 const sendPasswordResetEmail = require("../utils/sendPasswordResetEmail");
@@ -478,6 +479,142 @@ router.put("/users/:name", upload.single("avatar"), async (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     return res.status(500).json({ error: "Failed to update profile." });
+  }
+});
+
+// ?? CompletedProjects
+// GET запрос для получения завершенных проектов пользователя
+router.get("/users/:name/completedProjects", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    // Находим пользователя по имени
+    const user = await User.findOne({ name });
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Получаем проекты по списку completedProjects
+    const completedProjects = await Project.find({
+      _id: { $in: user.completedProjects },
+    });
+
+    res.status(200).json({
+      completedProjects,
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to retrieve completed projects." });
+  }
+});
+
+// GET запрос для получения hoursVolunteered пользователя
+router.get("/users/:name/hoursVolunteered", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const user = await User.findOne({ name });
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.status(200).json({
+      hoursVolunteered: user.hoursVolunteered,
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({ error: "Failed to retrieve hours." });
+  }
+});
+
+// Функция для подсчета часов, которые были потрачены на завершенные проекты
+async function calculateTotalVolunteeredHours(user) {
+  try {
+    // Получаем все проекты пользователя по ID, которые находятся в completedProjects
+    const projects = await Project.find({
+      _id: { $in: user.completedProjects },
+    });
+
+    let totalHours = 0;
+
+    // Проверяем, какие проекты уже были учтены для добавления в hoursVolunteered
+    const alreadyCalculatedProjects = user.hoursCalculated || [];
+
+    projects.forEach((project) => {
+      // Если проект еще не был учтен
+      if (!alreadyCalculatedProjects.includes(project._id)) {
+        const hours = typeof project.hours === "number" ? project.hours : 0;
+        totalHours += hours;
+
+        // Добавляем ID проекта в список учтенных проектов
+        alreadyCalculatedProjects.push(project._id);
+      }
+    });
+
+    // Обновляем поле hoursCalculated в модели пользователя
+    user.hoursCalculated = alreadyCalculatedProjects;
+    await user.save();
+
+    return totalHours;
+  } catch (err) {
+    console.error("Error calculating total hours:", err);
+    throw new Error("Failed to calculate total hours.");
+  }
+}
+
+router.put("/users/:name/completeProjects", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const user = await User.findOne({ name });
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const updatedJoinedEvents = [];
+    const completedProjectIds = [];
+
+    const projects = await Project.find({
+      _id: { $in: user.joinedEvents },
+    });
+
+    for (const project of projects) {
+      const isAlreadyCompleted = user.completedProjects.includes(project._id);
+      if (project.status === "completed" && !isAlreadyCompleted) {
+        completedProjectIds.push(project._id);
+      } else {
+        updatedJoinedEvents.push(project._id);
+      }
+    }
+
+    // Обновляем пользователя с добавленными завершенными проектами
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      {
+        joinedEvents: updatedJoinedEvents,
+        $addToSet: { completedProjects: { $each: completedProjectIds } },
+      },
+      { new: true }
+    );
+
+    // Вычисляем и обновляем количество часов волонтерства
+    const totalVolunteeredHours = await calculateTotalVolunteeredHours(
+      updatedUser
+    );
+
+    // Обновляем поле hoursVolunteered
+    updatedUser.hoursVolunteered = totalVolunteeredHours;
+    await updatedUser.save();
+
+    res.status(200).json({
+      message: "Completed projects moved to completedProjects successfully.",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({ error: "Failed to update projects." });
   }
 });
 

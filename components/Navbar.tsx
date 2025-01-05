@@ -10,6 +10,7 @@ import { api } from "@/hooks/api";
 import { fetchUserAvatarNavbar } from "@/server/utils/fetchUserAvatarNavbar";
 
 interface User {
+  _id: string;
   name: string;
   avatar?: string;
 }
@@ -74,9 +75,73 @@ const Navbar: React.FC = () => {
     setAvatarLoaded(true);
   };
 
+  const [chats, setChats] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchChatsAndUsers = async () => {
+      if (token) {
+        try {
+          const chatsResponse = await fetch(`${api}/chats`, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const chatsData = await chatsResponse.json();
+
+          const sortedChats = chatsData.data.sort((a: any, b: any) => {
+            const lastMessageA = a.messages?.[a.messages.length - 1] || null;
+            const lastMessageB = b.messages?.[b.messages.length - 1] || null;
+
+            const dateA = lastMessageA
+              ? new Date(lastMessageA.createdAt)
+              : new Date(0);
+            const dateB = lastMessageB
+              ? new Date(lastMessageB.createdAt)
+              : new Date(0);
+
+            return dateB.getTime() - dateA.getTime();
+          });
+
+          setChats(sortedChats);
+        } catch (error) {
+          console.error("Error fetching chats or users:", error);
+        }
+      }
+    };
+
+    fetchChatsAndUsers();
+  }, [token, pathname]);
+
+  const getUnreadCount = (chat: any) => {
+    const unreadMessages = chat.messages.filter(
+      (message: any) => !message.isRead && message.senderId._id !== user?._id
+    );
+    return unreadMessages.length > 0;
+  };
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const totalUnreadCount = chats.reduce(
+    (total, chat) => total + getUnreadCount(chat),
+    0
+  );
+
+  useEffect(() => {
+    setUnreadCount(totalUnreadCount);
+  }, [totalUnreadCount, setUnreadCount]);
+
   return (
-    <nav className="relative z-40 py-4 bg-white border-b-2 border-gray-100 flex">
-      <div className="container mx-auto flex items-center justify-between text-gray-800 text-lg font-medium">
+    <nav
+      className={`relative z-40 py-4 border-b ${
+        pathname == "/chat"
+          ? "bg-teal-600 border-none"
+          : "bg-white border-gray-100"
+      }   flex`}
+    >
+      <div
+        className={`container mx-auto flex items-center justify-between ${
+          pathname == "/chat" ? "text-gray-50" : "text-gray-800"
+        } text-lg font-medium`}
+      >
         {/* Логотип */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center relative">
@@ -86,7 +151,13 @@ const Navbar: React.FC = () => {
               priority
               className="w-12 h-12 lg:w-24 lg:h-24 absolute hover:scale-110 duration-200 hover:duration-200"
             />
-            <p className="text-2xl font-extrabold tracking-wider ml-[55%] hover:text-teal-600 transition duration-300">
+            <p
+              className={`text-2xl font-extrabold tracking-wider ml-[55%] ${
+                pathname == "/chat"
+                  ? "hover:text-yellow-400"
+                  : "hover:text-teal-600"
+              } transition duration-300`}
+            >
               VOLUNTEER
             </p>
           </Link>
@@ -99,6 +170,8 @@ const Navbar: React.FC = () => {
             className={`${
               pathname === "/"
                 ? "text-indigo-400 underline underline-offset-4 decoration-wavy decoration-indigo-400"
+                : pathname === "/chat"
+                ? "hover:text-yellow-400   decoration-yellow-400 transition duration-300"
                 : "hover:text-indigo-400 transition duration-300"
             }`}
           >
@@ -109,6 +182,8 @@ const Navbar: React.FC = () => {
             className={`${
               pathname.startsWith("/projects") && pathname !== "/projects/add"
                 ? "text-orange-600 underline underline-offset-4 decoration-wavy decoration-orange-600"
+                : pathname === "/chat"
+                ? "hover:text-yellow-400   decoration-yellow-400 transition duration-300"
                 : "hover:text-orange-600 transition duration-300"
             }`}
           >
@@ -119,6 +194,8 @@ const Navbar: React.FC = () => {
             className={`${
               pathname === "/about"
                 ? "text-yellow-500 underline underline-offset-4 decoration-wavy decoration-yellow-500"
+                : pathname === "/chat"
+                ? "hover:text-yellow-400   decoration-yellow-400 transition duration-300"
                 : "hover:text-yellow-500 transition duration-300"
             }`}
           >
@@ -129,17 +206,22 @@ const Navbar: React.FC = () => {
               href="/chat"
               className={`${
                 pathname === "/chat"
-                  ? "text-teal-600 underline underline-offset-4 decoration-wavy decoration-teal-600"
+                  ? "text-yellow-400 underline underline-offset-4 decoration-wavy decoration-yellow-400"
                   : "hover:text-teal-600 transition duration-300"
               }`}
             >
-              Messages
+              <span>{`Messages  `}</span>
+              {unreadCount !== 0 && pathname !== "/chat" ? (
+                <span className="bg-teal-600 rounded-full py-2 px-4 text-white text-base hover:bg-yellow-400 duration-300">
+                  New {unreadCount}
+                </span>
+              ) : null}
             </Link>
           )}
         </div>
 
         {/* Аватар или кнопка входа */}
-        <div className="items-center space-x-4 hidden md:flex">
+        <div className="items-center space-x-4 hidden md:flex text-gray-800">
           {(isLoading || !avatarLoaded) && user ? (
             <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-300 animate-pulse"></div>
           ) : user ? (

@@ -49,9 +49,26 @@ interface EditUserPageProps {
   userData: UserProfile;
   token: string | undefined;
   currentUser: CurrentUser | null;
+  setRefresh: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
+type ProjectData = {
+  _id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  images: string[];
+  hours: number;
+};
+
+const EditUserPage = ({
+  userData,
+  token,
+  currentUser,
+  setRefresh,
+}: EditUserPageProps) => {
   const [profileData, setProfileData] = useState(userData);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,6 +76,35 @@ const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [loadingAvatar, setLoadingAvatar] = useState(true);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [completedProjects, setCompletedProjects] = useState<
+    ProjectData[] | null
+  >(null);
+  const [loadingCompletedProjects, setLoadingCompletedProjects] =
+    useState(false);
+
+  const fetchCompletedProjects = async () => {
+    try {
+      setLoadingCompletedProjects(true);
+
+      const response = await fetch(
+        `${api}/auth/users/${profileData?.name}/completedProjects`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setCompletedProjects(data.completedProjects);
+    } catch (err) {
+      console.error("Error fetching completed projects:", err);
+    } finally {
+      setLoadingCompletedProjects(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompletedProjects();
+  }, [userData]);
 
   useEffect(() => {
     const loadAvatar = async () => {
@@ -163,7 +209,9 @@ const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
     }
   };
 
-  console.log(userData.joinedEvents);
+  const getImageUrl = (imageId: string) => {
+    return `${api}/projects/images/${imageId}`;
+  };
 
   return (
     <div className="z-10 relative p-6 gap-10 flex flex-col w-11/12 m-auto">
@@ -224,7 +272,6 @@ const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
               href="/chat"
               onClick={() => {
                 if (profileData?.name) {
-                  // Условие проверки, чтобы profileData содержал имя
                   localStorage.setItem(
                     "chatWithOrganizer",
                     JSON.stringify(profileData)
@@ -282,7 +329,6 @@ const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
           </p>
         </div>
       </div>
-
       {/* Achievements */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white ">
         <div className="flex justify-between">
@@ -290,20 +336,103 @@ const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
         </div>
         <div className="divider m-0"></div>
         <div className="flex flex-col gap-6">
-          <p className="flex gap-4  text-sm lg:text-lg">
+          <p className="flex gap-4 text-sm lg:text-lg">
             <span className="w-64">Rating</span>
-            <span className="text-yellow-500">{profileData.rating}</span>
+            <span className="text-yellow-500 font-medium">
+              {profileData.rating}
+            </span>
           </p>
-          <p className="flex gap-4  text-sm lg:text-lg">
+          <p className="flex gap-4 text-sm lg:text-lg">
             <span className="w-64">Hours Volunteered</span>
-            <span className="text-green-600">
+            <span className="text-green-600 font-medium">
               {profileData.hoursVolunteered}
             </span>
           </p>
-          <p className="flex gap-4  text-sm lg:text-lg">
+          <p className="flex gap-4 text-sm lg:text-lg">
             <span className="w-64">Completed Projects Count</span>
-            <span className="text-violet-400">{profileData.projectsCount}</span>
+            <span className="text-violet-400 font-medium">
+              {profileData.completedProjects?.length}
+            </span>
           </p>
+        </div>
+      </div>
+
+      {/* Completed Projects */}
+      <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white mt-6">
+        <div className="flex justify-between">
+          <h2 className="text-base m:text-lg lg:text-xl">Completed Projects</h2>
+        </div>
+        <div className="divider m-0"></div>
+        <div className="relative">
+          {completedProjects && completedProjects?.length > 0 ? (
+            <>
+              <div className="carousel w-full rounded-box gap-5">
+                {completedProjects?.map((project, index) => (
+                  <Link
+                    href={`/projects/${project._id}`}
+                    key={index}
+                    className="carousel-item p-4 rounded-3xl border-2  border-gray-300 flex flex-col items-center h-96 w-72 hover:border-gray-500 duration-200 cursor-pointer"
+                  >
+                    {/* Изображение проекта */}
+                    <img
+                      src={getImageUrl(project.images[0])}
+                      alt={project?.title || "Project Image"}
+                      className="rounded-md w-full h-32 object-cover mb-4"
+                    />
+                    {/* Заголовок проекта */}
+                    <h3 className="text-lg font-bold text-center truncate overflow-hidden w-full whitespace-nowrap">
+                      {project?.title}
+                    </h3>
+
+                    {/* Описание */}
+                    <p className="text-sm text-gray-600 text-center mt-2 overflow-hidden line-clamp-3">
+                      {project?.description}
+                    </p>
+                    {/* Локация */}
+                    <p className="text-sm text-gray-500 mt-2">
+                      <span className="font-semibold">Location:</span>{" "}
+                      {project?.location || "N/A"}
+                    </p>
+                    {/* Даты проекта */}
+                    <p className="text-sm text-gray-500 mt-1">
+                      <span className="font-semibold">Start Date:</span>{" "}
+                      {new Date(project?.startDate)
+                        .toLocaleString("ru-RU", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        .replace(",", " |")}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      <span className="font-semibold">End Date:</span>{" "}
+                      {new Date(project?.endDate)
+                        .toLocaleString("ru-RU", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        .replace(",", " |")}
+                    </p>
+
+                    {/* Часы */}
+                    <p className="text-sm text-gray-500 mt-2">
+                      <span className="font-semibold">Hours:</span>{" "}
+                      {project?.hours || 0}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-500 text-center text-lg">
+              No completed projects yet.
+            </p>
+          )}
         </div>
       </div>
 
@@ -312,6 +441,7 @@ const EditUserPage = ({ userData, token, currentUser }: EditUserPageProps) => {
         userName={profileData?.name}
         currentUser={currentUser}
         token={token}
+        setRefreshData={setRefresh}
       />
 
       {isOwner && (

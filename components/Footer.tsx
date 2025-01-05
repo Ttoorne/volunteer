@@ -1,9 +1,17 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 const Footer = () => {
+  const pathname = usePathname();
+
   return (
-    <footer className="relative bg-indigo-900 text-white py-16 overflow-hidden">
+    <footer
+      className={`${
+        pathname === "/chat" ? "hidden" : ""
+      } relative bg-indigo-900 text-white py-16 overflow-hidden`}
+    >
       {/* Floating Shapes */}
       <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-r from-blue-500 to-teal-400 opacity-50 rounded-full blur-2xl animate-bounce"></div>
       <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-purple-500 to-pink-400 opacity-30 rounded-full blur-3xl animate-spin-slow"></div>

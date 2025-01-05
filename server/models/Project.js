@@ -74,6 +74,10 @@ const projectSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    hours: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

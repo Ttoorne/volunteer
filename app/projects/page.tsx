@@ -92,7 +92,14 @@ const ProjectsPage = () => {
       );
     });
 
-    filtered = filtered.sort((a, b) => {
+    const openAndInProgress = filtered.filter(
+      (project) => project.status === "open" || project.status === "in-progress"
+    );
+    const completedProjects = filtered.filter(
+      (project) => project.status === "completed"
+    );
+
+    const sortByDate = (a: Project, b: Project) => {
       const dateA = new Date(a.startDate).getTime();
       const dateB = new Date(b.startDate).getTime();
 
@@ -101,9 +108,14 @@ const ProjectsPage = () => {
       } else {
         return dateB - dateA;
       }
-    });
+    };
 
-    setFilteredProjects(filtered);
+    openAndInProgress.sort(sortByDate);
+    completedProjects.sort(sortByDate);
+
+    const sortedProjects = [...openAndInProgress, ...completedProjects];
+
+    setFilteredProjects(sortedProjects);
   }, [filters, projects]);
 
   const handleFilterChange = (key: string, value: string) => {

@@ -42,6 +42,16 @@ router.post("/", upload.array("images", 6), async (req, res) => {
       })
     );
 
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start) || isNaN(end)) {
+      return res.status(400).json({ error: "Invalid start or end date." });
+    }
+
+    const timeDiff = end - start;
+    const hours = timeDiff / (1000 * 60 * 60);
+
     const project = new Project({
       title,
       description,
@@ -50,6 +60,7 @@ router.post("/", upload.array("images", 6), async (req, res) => {
       endDate,
       location,
       images,
+      hours,
     });
 
     await project.save();
@@ -88,7 +99,6 @@ router.get("/images/:id", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const projects = await Project.find();
-    // .populate("organizer", "name email");
     res.status(200).json(projects);
   } catch (error) {
     res
@@ -120,13 +130,31 @@ router.get("/:id", async (req, res) => {
 // Обновление проекта по ID
 router.put("/:id", upload.array("images", 6), async (req, res) => {
   try {
-    const { participants, ...updateFields } = req.body;
+    const { startDate, endDate, participants, status, ...updateFields } =
+      req.body;
 
-    // Находим проект по ID
     const project = await Project.findById(req.params.id);
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (startDate && endDate) {
+      const isValidDate = (date) => !isNaN(new Date(date).getTime());
+
+      if (!isValidDate(startDate) || !isValidDate(endDate)) {
+        return res.status(400).json({ error: "Invalid startDate or endDate." });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      const timeDiff = end - start;
+      const hours = timeDiff / (1000 * 60 * 60);
+
+      project.startDate = start;
+      project.endDate = end;
+      project.hours = Math.round(hours * 100) / 100;
     }
 
     let images = project.images || [];
@@ -235,7 +263,6 @@ router.put("/:id", upload.array("images", 6), async (req, res) => {
           }
         }
       } else {
-        // Если участников не осталось, очищаем список
         project.participants = [];
       }
     }

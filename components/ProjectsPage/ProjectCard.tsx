@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { format, isBefore, isAfter } from "date-fns";
 import { api } from "@/hooks/api";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface Project {
   _id: string;
   title: string;
   description: string;
   images: string[];
+  status: string;
   [key: string]: any;
 }
 
@@ -17,8 +18,16 @@ interface ProjectCardProps {
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  const formattedStartDate = format(new Date(project.startDate), "dd MMM yyyy");
-  const formattedStartHour = format(new Date(project.startDate), "HH:mm");
+  const [currentProject, setCurrentProject] = useState<Project>(project);
+
+  const formattedStartDate = format(
+    new Date(currentProject?.startDate),
+    "dd MMM yyyy"
+  );
+  const formattedStartHour = format(
+    new Date(currentProject?.startDate),
+    "HH:mm"
+  );
 
   const url = `${api}/projects`;
 
@@ -42,7 +51,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       }
 
       const data = await response.json();
-      console.log("Project status updated:", data);
+      setCurrentProject((prevProject) => ({
+        ...prevProject,
+        status: newStatus,
+      }));
       return data;
     } catch (error) {
       console.error("Error updating project status:", error);
@@ -52,10 +64,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
   useEffect(() => {
     const now = new Date();
-    const start = new Date(project.startDate);
-    const end = new Date(project.endDate);
+    const start = new Date(currentProject?.startDate);
+    const end = new Date(currentProject?.endDate);
 
-    let newStatus = project.status;
+    let newStatus = currentProject?.status;
 
     if (isBefore(now, start)) {
       newStatus = "open";
@@ -65,73 +77,74 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       newStatus = "in-progress";
     }
 
-    if (newStatus !== project.status) {
-      updateProjectStatus(project._id, newStatus);
+    // Если статус изменился, обновляем его
+    if (newStatus !== currentProject?.status) {
+      updateProjectStatus(currentProject?._id, newStatus);
     }
-  }, [project]);
+  }, [currentProject]);
 
   return (
     <div className="h-72 lg:h-80 card lg:card-side bg-gray-100 flex flex-col shadow-xl group ">
       <figure className="w-2/4 overflow-hidden flex justify-center items-center  bg-gray-800 border-r-4 border-gray-300 skeleton">
         <img
-          src={getImageUrl(project.images[0])}
+          src={getImageUrl(currentProject?.images[0])}
           alt="Project image"
           className="object-cover w-full h-full hidden md:block"
         />
         <p
           className={`absolute left-4 top-4 text-white font-medium badge p-5 opacity-0 group-hover:opacity-100 ${
-            project.status === "open"
+            currentProject?.status === "open"
               ? "badge-success"
-              : project.status === "in-progress"
+              : currentProject?.status === "in-progress"
               ? "badge-warning"
               : "bg-blue-500 border-transparent"
           }`}
         >
-          {project.status == "in-progress"
+          {currentProject?.status == "in-progress"
             ? "IN PROGRESS"
-            : project.status.toUpperCase()}
+            : currentProject?.status.toUpperCase()}
         </p>
       </figure>
       <div className="card-body">
         <h2 className="card-title flex gap-3 items-center text-lg lg:text-2xl pt-4">
           <span>
-            {project.title.length > 100
-              ? `${project.title.slice(0, 100)}...`
-              : project.title}
+            {currentProject?.title.length > 100
+              ? `${currentProject?.title.slice(0, 100)}...`
+              : currentProject?.title}
           </span>
         </h2>
 
         <p className="block sm:hidden">
-          {project.description.length > 50
-            ? `${project.description.slice(0, 50)}...`
-            : project.description}
+          {currentProject?.description.length > 50
+            ? `${currentProject?.description.slice(0, 50)}...`
+            : currentProject?.description}
         </p>
         <p className="hidden sm:block md:hidden">
-          {project.description.length > 70
-            ? `${project.description.slice(0, 70)}...`
-            : project.description}
+          {currentProject?.description.length > 70
+            ? `${currentProject?.description.slice(0, 70)}...`
+            : currentProject?.description}
         </p>
         <p className="hidden md:block">
-          {project.description.length > 220
-            ? `${project.description.slice(0, 220)}...`
-            : project.description}
+          {currentProject?.description.length > 220
+            ? `${currentProject?.description.slice(0, 220)}...`
+            : currentProject?.description}
         </p>
 
         <p className="flex items-center gap-1 absolute right-4 top-4 font-medium">
           <span className="block sm:hidden">
-            {project.location.length > 30
-              ? `${project.location.slice(0, 30)}...`
-              : project.location}
+            {currentProject?.location.length > 30
+              ? `${currentProject?.location.slice(0, 30)}...`
+              : currentProject?.location}
           </span>
           <span className="hidden sm:block md:hidden">
-            {project.location.length > 50
-              ? `${project.location.slice(0, 50)}...`
-              : project.location}
+            {currentProject?.location.length > 50
+              ? `${currentProject?.location.slice(0, 50)}...`
+              : currentProject?.location}
           </span>
           <span className="hidden md:block">
-            {project.location.length > 100
-              ? `${project.location.slice(0, 100)}...`
-              : project.location}
+            {currentProject?.location.length > 100
+              ? `${currentProject?.location.slice(0, 100)}...`
+              : currentProject?.location}
           </span>
           <svg
             className="w-7 h-7"
@@ -293,7 +306,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </div>
 
         <div className="card-actions mt-5">
-          <Link href={`/projects/${project._id}`} className="w-full">
+          <Link href={`/projects/${currentProject?._id}`} className="w-full">
             <button className="btn btn-primary text-white w-full rounded-2xl">
               Watch
             </button>

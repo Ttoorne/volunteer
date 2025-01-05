@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get("accessToken")?.value;
 
   // Путь, требующий авторизации
-  const protectedRoutes = ["/chat", "/settings"];
+  const protectedRoutes = ["/chat"];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)

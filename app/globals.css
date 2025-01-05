@@ -155,6 +155,10 @@ input[type="number"]::-webkit-inner-spin-button {
   transform: translateX(-50%) translateY(-20px);
 }
 
+.input {
+  background-color: #fff !important;
+}
+
 /* calendar */
 .react-calendar {
   width: 50% !important;

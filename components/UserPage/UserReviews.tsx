@@ -28,9 +28,15 @@ interface UserReviewsProps {
   token?: string;
   userName: string;
   currentUser: CurrentUser | null;
+  setRefreshData: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const UserReviews = ({ userName, currentUser, token }: UserReviewsProps) => {
+const UserReviews = ({
+  userName,
+  currentUser,
+  token,
+  setRefreshData,
+}: UserReviewsProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newReview, setNewReview] = useState<string>("");
   const [newRating, setNewRating] = useState<number | null>(null);
@@ -46,6 +52,10 @@ const UserReviews = ({ userName, currentUser, token }: UserReviewsProps) => {
   } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+
+  const handleUpdate = () => {
+    setRefreshData((prev) => !prev);
+  };
 
   const handleAddReview = async () => {
     if (!newReview.trim()) {
@@ -93,6 +103,7 @@ const UserReviews = ({ userName, currentUser, token }: UserReviewsProps) => {
     } finally {
       setLoading(false);
       setRefresh((prev) => !prev);
+      handleUpdate();
     }
   };
 
@@ -134,6 +145,7 @@ const UserReviews = ({ userName, currentUser, token }: UserReviewsProps) => {
         message: "Failed to delete review. Please try again.",
       });
     } finally {
+      handleUpdate();
       setIsModalOpen(false);
       setReviewToDelete(null);
     }
@@ -192,6 +204,7 @@ const UserReviews = ({ userName, currentUser, token }: UserReviewsProps) => {
     } finally {
       setLoading(false);
       setRefresh((prev) => !prev);
+      handleUpdate();
     }
   };
 

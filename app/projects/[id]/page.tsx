@@ -70,6 +70,7 @@ const ProjectPage = () => {
   const [isEditModalOpen, setEditModalOpen] = useState<boolean>(false);
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
   const [organizer, setOrganizer] = useState<Organizer | undefined>(undefined);
+  const [refresh, setRefresh] = useState<boolean>(false);
 
   const background = GenerateBackground();
 
@@ -188,7 +189,7 @@ const ProjectPage = () => {
 
   useEffect(() => {
     fetchProject();
-  }, [id]);
+  }, [id, refresh]);
 
   const getImageUrl = (imageId: string) => `${API_BASE_URL}/images/${imageId}`;
 
@@ -271,6 +272,8 @@ const ProjectPage = () => {
     (participant) => participant?.user?._id === currentUser?._id
   );
 
+  console.log(project);
+
   if (loading) {
     return (
       <div
@@ -311,6 +314,7 @@ const ProjectPage = () => {
       {/* Modals */}
       {isEditModalOpen && (
         <ProjectEditModal
+          setRefresh={setRefresh}
           project={project}
           onClose={handleCloseEditModal}
           onUpdate={(updatedProject) => setProject(updatedProject)}

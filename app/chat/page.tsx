@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
 import { api } from "@/hooks/api";
-import ChatComponent from "@/components/ChatComponent";
-import background from "@/assets/chat__background.jpg";
+import ChatComponent from "@/components/ChatsPage/ChatComponent";
+import background from "@/assets/chat_page__bg.png";
+import Link from "next/link";
+import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 
 const ChatPage: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
@@ -13,7 +15,50 @@ const ChatPage: React.FC = () => {
   const [chats, setChats] = useState<any[]>([]);
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatParticipant, setChatParticipant] = useState<any | null>(null);
+  const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [refresh, setRefresh] = useState<boolean>(false);
 
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      const avatar = await loadAvatar(
+        chatParticipant?.avatar ||
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-DSW54utMSZ6J1F9luVr6YYDoRZ-FQYCL3w&s"
+      );
+      setAvatarUrl(avatar);
+    };
+
+    fetchAvatar();
+  }, [chatParticipant]);
+
+  useEffect(() => {
+    const fetchAvatars = async () => {
+      const avatarPromises = users.map(async (user) => {
+        const avatarId = user.avatar;
+        const imageUrl = await loadAvatar(avatarId);
+        return { avatarId, imageUrl };
+      });
+
+      const avatars = await Promise.all(avatarPromises);
+      const avatarMap = avatars.reduce(
+        (acc, { avatarId, imageUrl }) => ({ ...acc, [avatarId]: imageUrl }),
+        {}
+      );
+
+      setAvatarUrls(avatarMap);
+    };
+
+    fetchAvatars();
+  }, [users]);
+
+  const loadAvatar = async (avatarId: string) => {
+    try {
+      const imageUrl = await fetchUserAvatar(avatarId);
+      return imageUrl;
+    } catch {
+      return "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
+    }
+  };
   const getTokenFromServer = async () => {
     try {
       const response = await fetch(`${api}/projects/some-route`, {
@@ -95,7 +140,7 @@ const ChatPage: React.FC = () => {
               ? new Date(lastMessageB.createdAt)
               : new Date(0);
 
-            return dateB.getTime() - dateA.getTime(); // Сортировка в порядке убывания
+            return dateB.getTime() - dateA.getTime();
           });
 
           setChats(sortedChats);
@@ -132,7 +177,7 @@ const ChatPage: React.FC = () => {
     };
 
     fetchChatsAndUsers();
-  }, [token, activeChat]);
+  }, [token, refresh]);
 
   useEffect(() => {
     if (activeChat) {
@@ -148,6 +193,7 @@ const ChatPage: React.FC = () => {
   }, [activeChat, users, userId]);
 
   const openChat = (chat: any) => {
+    setRefresh((prev) => !prev);
     setActiveChat(chat);
   };
 
@@ -185,6 +231,13 @@ const ChatPage: React.FC = () => {
     return unreadMessages.length;
   };
 
+  const getUnreadUserCount = (chat: any) => {
+    const unreadMessages = chat.messages.filter(
+      (message: any) => !message.isRead && message.senderId._id !== userId
+    );
+    return unreadMessages.length > 0;
+  };
+
   if (!userId || !token || !socket)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -193,11 +246,32 @@ const ChatPage: React.FC = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex relative">
+    <div
+      className="min-h-screen bg-transparent flex gap-5 relative"
+      style={{
+        minHeight: "100vh",
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${background.src})`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       {/* Левая панель: список чатов */}
-      <div className="w-1/3 bg-white p-4 sticky top-0 h-screen border-r-2 border-gray-100">
-        <h2 className="text-2xl font-medium mb-4">Chats</h2>
-        <ul>
+      <div className="w-1/3 bg-gray-50 sticky mt-[5vh] rounded-3xl top-[5vh] left-5 h-[90vh] shadow-lg">
+        <h2 className="h-16 text-xl font-medium text-white bg-teal-600 p-5 rounded-t-3xl flex items-center justify-center gap-2">
+          <span>Chats</span>
+          {chats.reduce((total, chat) => total + getUnreadUserCount(chat), 0) >
+            0 && (
+            <span className="bg-gray-50 text-gray-500 text-sm font-bold py-1 px-3 rounded-full">
+              {chats.reduce(
+                (total, chat) => total + getUnreadUserCount(chat),
+                0
+              )}
+            </span>
+          )}
+        </h2>
+        <ul className="overflow-y-auto">
           {chats.map((chat) => {
             const participantId = chat.participants.find(
               (participant: any) => participant?._id !== userId
@@ -219,52 +293,64 @@ const ChatPage: React.FC = () => {
               <li
                 key={chat._id}
                 onClick={() => openChat(chat)}
-                className={`flex items-center justify-between p-4 mb-2 rounded-lg cursor-pointer ${
+                className={`flex items-center justify-between py-4 px-6 cursor-pointer transition-all duration-300 ${
                   activeChat?._id === chat._id
-                    ? "bg-blue-100"
-                    : "hover:bg-gray-100"
-                } `}
+                    ? "bg-blue-100 border-l-8 border-blue-400"
+                    : "hover:bg-gray-200"
+                }`}
               >
-                <div>
-                  <div className="flex justify-between">
-                    <span>{participant?.name || "Unknown user"}</span>
-                  </div>
-                  <div
-                    className={`text-sm mt-1 flex items-center ${
-                      isMyMessage
-                        ? isRead
-                          ? "text-blue-600 font-semibold"
-                          : "text-gray-500"
-                        : "text-gray-600"
-                    }`}
-                  >
-                    {lastMessage ? (
-                      <>
-                        {isMyMessage && (
-                          <span className="mr-1">
-                            {isRead ? (
-                              <i className="fas fa-check-double text-green-500">
-                                ✓✓
-                              </i>
-                            ) : (
-                              <i className="fas fa-check text-gray-500">✓</i>
-                            )}
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={
+                      avatarUrls[participant?.avatar] ||
+                      "https://cdn-icons-png.flaticon.com/512/3607/3607444.png"
+                    }
+                    alt="Avatar"
+                    className="w-14 h-14 rounded-full object-cover border border-gray-300"
+                  />
+                  <div>
+                    <span className="block font-semibold text-gray-800 text-base">
+                      {"@" + participant?.name || "Unknown user"}
+                    </span>
+                    <div
+                      className={`text-sm mt-1 ${
+                        isMyMessage
+                          ? isRead
+                            ? "text-blue-500 font-semibold"
+                            : "text-gray-500"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {lastMessage ? (
+                        <>
+                          {isMyMessage && (
+                            <span className="mr-1">
+                              {isRead ? (
+                                <i className="fas fa-check-double font-semibold text-green-600">
+                                  ✓✓
+                                </i>
+                              ) : (
+                                <i className="fas fa-check font-semibold text-gray-400">
+                                  ✓
+                                </i>
+                              )}
+                            </span>
+                          )}
+                          <span className="font-medium">
+                            {" " + lastMessage.content}
                           </span>
-                        )}
-                        {lastMessage.content}
-                      </>
-                    ) : (
-                      "No messages yet"
-                    )}
+                        </>
+                      ) : (
+                        "No messages yet"
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  {getUnreadCount(chat) > 0 && (
-                    <p className="text-white bg-blue-400 w-7 h-7 font-medium rounded-full flex items-center justify-center">
-                      <span>{getUnreadCount(chat)}</span>
-                    </p>
-                  )}
-                </div>
+                {getUnreadCount(chat) > 0 && (
+                  <div className="text-white bg-blue-500 px-3 py-1 text-sm font-semibold rounded-full">
+                    {getUnreadCount(chat)}
+                  </div>
+                )}
               </li>
             );
           })}
@@ -272,28 +358,37 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Правая панель: активный чат */}
-      <div
-        className="w-2/3"
-        style={{
-          minHeight: "100vh",
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${background.src})`,
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundAttachment: "fixed",
-        }}
-      >
+      <div className="w-2/3 relative">
         {activeChat && chatParticipant ? (
           <div>
-            <h2 className="flex items-center text-2xl font-medium mb-4 px-4 bg-white sticky z-50 top-0 h-20">
-              <span>{chatParticipant.name}</span>
+            <h2 className="flex items-center text-2xl font-medium px-6 py-4 h-20 bg-white sticky mt-5 top-3 z-20 rounded-3xl w-[95%] mx-auto">
+              <Link
+                href={`/profile/${chatParticipant.name}`}
+                className="flex items-center space-x-4  "
+              >
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-gray-500 shadow-lg"
+                />
+                <div className="flex flex-col">
+                  <p className="text-xl font-semibold text-gray-900 hover:text-teal-700 transition duration-300">
+                    @{chatParticipant.name}
+                  </p>
+                  <p className="text-base text-gray-600">
+                    {chatParticipant.firstName + " " + chatParticipant.lastName}
+                  </p>
+                </div>
+              </Link>
             </h2>
+
             <ChatComponent
               chatParticipantName={chatParticipant.name}
               userId={userId}
               token={token}
               chatId={activeChat._id}
               chatParticipantId={chatParticipant._id}
+              setRefresh={setRefresh}
             />
           </div>
         ) : (

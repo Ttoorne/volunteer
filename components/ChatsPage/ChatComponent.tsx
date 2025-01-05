@@ -3,7 +3,7 @@ import { useEffect, useState, ChangeEvent, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import { api } from "@/hooks/api";
 import { format, isToday, isYesterday, isSameYear } from "date-fns";
-import { ru, enUS, tr } from "date-fns/locale"; // Импортируем русскую, английскую и турецкую локали
+import { ru, enUS, tr } from "date-fns/locale";
 import background from "@/assets/chat__background.jpg";
 
 interface Message {
@@ -22,7 +22,8 @@ interface ChatComponentProps {
   chatId: string;
   chatParticipantId: string;
   chatParticipantName: string;
-  locale?: "ru" | "en" | "tr"; // Сделаем locale необязательным
+  locale?: "ru" | "en" | "tr";
+  setRefresh: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ChatComponent: React.FC<ChatComponentProps> = ({
@@ -31,7 +32,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   chatId,
   chatParticipantId,
   chatParticipantName,
-  locale = "en", // По умолчанию будет английский язык
+  locale = "en",
+  setRefresh,
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -141,6 +143,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           },
         ]);
         setNewMessage("");
+        setRefresh((prev) => !prev);
       } else {
         console.error(data.error);
       }
@@ -223,7 +226,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   }, [messages]);
 
-  // Группируем сообщения по датам
   const groupedMessages = messages.reduce(
     (acc: { [key: string]: Message[] }, msg) => {
       const formattedDate = formatDate(msg.createdAt);
@@ -237,12 +239,14 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   );
 
   return (
-    <div className="flex flex-col p-4 h-full">
+    <div className="flex flex-col p-4 h-full relative">
       <div className="flex-1 overflow-y-auto mb-4">
         <div className="flex flex-col">
           {Object.keys(groupedMessages).map((date) => (
             <div key={`${chatId}-${date}`} className="mb-4">
-              <div className="text-center text-gray-200 mt-4 mb-2">{date}</div>
+              <div className="text-center text-gray-100 text-lg mt-4 mb-2">
+                {date}
+              </div>
               {groupedMessages[date].map((msg) => (
                 <div
                   key={`${msg._id}-${chatId}-${date}`}
@@ -251,17 +255,25 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
                   }`}
                 >
                   <div
-                    className={`chat-bubble hover:scale-110 max-w-[75%] p-3 rounded-lg ${
+                    className={`chat-bubble py-3 px-5 rounded-3xl ${
                       msg.senderId === userId
-                        ? "bg-blue-800 text-white"
+                        ? "bg-indigo-600 text-white"
                         : "bg-gray-100 text-black"
                     }`}
                   >
                     <p>{msg.content}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-400 mt-1">
+                    <div
+                      className={`flex items-center justify-between text-xs 
+                      ${
+                        msg.senderId === userId
+                          ? "text-gray-300"
+                          : "text-gray-400"
+                      }
+                       mt-1`}
+                    >
                       <span>{formatTime(msg.createdAt)}</span>
                       {msg.senderId === userId && (
-                        <span className="ml-2">
+                        <span className="ml-2 font-semibold">
                           {msg.isRead ? (
                             <i className="fas fa-check-double text-green-400">
                               ✓✓
@@ -281,16 +293,16 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex items-center">
+      <div className="flex text-base items-center sticky justify-center bottom-5 w-4/5 mx-auto">
         <textarea
           value={newMessage}
           onChange={handleInputChange}
           placeholder="Type a message..."
-          className="border p-2 w-full rounded-2xl bg-white text-black"
+          className="border-2 p-4 w-full rounded-2xl bg-white text-black focus:border-teal-600 outline-none"
         />
         <button
           onClick={handleSendMessage}
-          className="bg-blue-500 text-white p-2 ml-2 rounded-md hover:scale-110 duration-200 hover:duration-200"
+          className="bg-blue-500 text-white p-4 ml-2 rounded-2xl hover:scale-110 duration-200 hover:duration-200"
         >
           Send
         </button>
