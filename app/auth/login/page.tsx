@@ -3,10 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import { api } from "@/hooks/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { login__translation } from "@/components/AuthPage/Translation";
 
 export default function LoginPage() {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = login__translation[language];
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<
@@ -34,13 +39,13 @@ export default function LoginPage() {
     const { email, password } = form;
     if (!email || !password) {
       return {
-        message: "Both fields are required.",
+        message: t.bothFieldsRequired,
         type: "warning" as "warning",
       };
     }
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (!emailPattern.test(email)) {
-      return { message: "Invalid email format.", type: "warning" as "warning" };
+      return { message: t.invalidEmailFormat, type: "warning" as "warning" };
     }
     return { message: null, type: null };
   };
@@ -71,17 +76,17 @@ export default function LoginPage() {
 
       if (res.ok) {
         localStorage.setItem("accessToken", data.accessToken);
-        setMessage("Login successful!");
+        setMessage(t.loginSuccessful);
         setMessageType("success");
 
         setForm({ email: "", password: "" });
         setTimeout(() => (window.location.href = "/"), 1500);
       } else {
-        setMessage(data.error || "Error occurred during login.");
+        setMessage(data.error || t.errorOccurred);
         setMessageType("error");
       }
     } catch (error) {
-      setMessage("Failed to connect to the server.");
+      setMessage(t.failedToConnect);
       setMessageType("error");
     } finally {
       setIsLoading(false);
@@ -112,12 +117,12 @@ export default function LoginPage() {
         </button>
 
         <h1 className="text-xl sm:text-2xl text-center font-bold mb-4">
-          Login
+          {t.login}
         </h1>
         <h3 className="flex flex-wrap gap-2 mb-4 text-center text-sm sm:text-base">
-          Don’t have an account?{" "}
+          {t.dontHaveAccount}
           <Link href="/auth/register" className="link-info hover:underline">
-            Sign up
+            {t.signUp}
           </Link>
         </h3>
 
@@ -145,7 +150,7 @@ export default function LoginPage() {
                 type="email"
                 name="email"
                 id="email"
-                placeholder="Your email"
+                placeholder={t.yourEmail}
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -174,7 +179,7 @@ export default function LoginPage() {
                 type="password"
                 name="password"
                 id="password"
-                placeholder="Your password"
+                placeholder={t.yourPassword}
                 value={form.password}
                 onChange={handleChange}
                 required
@@ -189,13 +194,13 @@ export default function LoginPage() {
             } btn btn-block sm:text-base text-sm`}
             disabled={isLoading}
           >
-            {isLoading ? "Logging in" : "Login"}
+            {isLoading ? t.loggingIn : t.login}
           </button>
         </form>
 
         <div className="mt-4 text-sm sm:text-base">
           <Link href="/auth/login/forgot-password" className="link-info">
-            Forgot password?
+            {t.forgotPassword}
           </Link>
         </div>
       </div>

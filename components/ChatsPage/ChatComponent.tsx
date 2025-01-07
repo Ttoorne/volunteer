@@ -4,7 +4,8 @@ import io from "socket.io-client";
 import { api } from "@/hooks/api";
 import { format, isToday, isYesterday, isSameYear } from "date-fns";
 import { ru, enUS, tr } from "date-fns/locale";
-import background from "@/assets/chat__background.jpg";
+import { useLanguage } from "@/context/LanguageContext";
+import { chatComponent__translations } from "./Translations";
 
 interface Message {
   senderId: string;
@@ -22,7 +23,6 @@ interface ChatComponentProps {
   chatId: string;
   chatParticipantId: string;
   chatParticipantName: string;
-  locale?: "ru" | "en" | "tr";
   setRefresh: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -32,9 +32,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   chatId,
   chatParticipantId,
   chatParticipantName,
-  locale = "en",
   setRefresh,
 }) => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = chatComponent__translations[language];
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
 
@@ -54,7 +56,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           body: JSON.stringify({ messageIds }),
         });
       } catch (error) {
-        console.error("Error updating isRead:", error);
+        console.error(t.errorUpdatingIsRead, error);
       }
     },
     [token]
@@ -93,7 +95,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error("Failed to fetch messages");
+          throw new Error(t.failedToFetchMessages);
         }
 
         const data = await response.json();
@@ -101,10 +103,10 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         if (Array.isArray(data.data)) {
           setMessages(data.data);
         } else {
-          console.error("Unexpected data format", data.data);
+          console.error(t.unexpectedDataFormat, data.data);
         }
       } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.error(t.errorFetchingMessages, error);
       }
     };
 
@@ -148,7 +150,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         console.error(data.error);
       }
     } catch (error) {
-      console.error("Error sending messages:", error);
+      console.error(t.errorSendingMessages, error);
     }
   };
 
@@ -156,19 +158,16 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     setNewMessage(e.target.value);
   };
 
-  // Функция для форматирования времени
   const formatTime = (dateString: string) => {
     const messageDate = new Date(dateString);
     return format(messageDate, "HH:mm");
   };
 
-  // Функция для выбора локали и форматирования даты
   const formatDate = (dateString: string) => {
     const messageDate = new Date(dateString);
     let localeToUse;
 
-    // Выбираем локаль в зависимости от выбранной
-    switch (locale) {
+    switch (language) {
       case "ru":
         localeToUse = ru;
         break;
@@ -183,9 +182,9 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     }
 
     if (isToday(messageDate)) {
-      return "Today";
+      return t.today;
     } else if (isYesterday(messageDate)) {
-      return "Yesterday";
+      return t.yesterday;
     } else if (!isSameYear(messageDate, new Date())) {
       return format(messageDate, "EEEE dd MMMM yyyy", { locale: localeToUse });
     } else {
@@ -194,7 +193,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   };
 
   useEffect(() => {
-    // Определяем сообщения собеседника, которые еще не прочитаны
     const unreadMessages = messages
       .filter((msg) => {
         const isFromParticipant = msg.senderId === chatParticipantId;
@@ -206,10 +204,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       });
 
     if (unreadMessages.length > 0) {
-      // Отправляем запрос на обновление isRead
       markMessagesAsRead(unreadMessages);
 
-      // Обновляем состояние, чтобы отобразить изменения на клиенте
       setMessages((prevMessages) => {
         const updatedMessages = prevMessages.map((msg) => {
           const shouldUpdate = unreadMessages.includes(msg._id);
@@ -297,14 +293,14 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         <textarea
           value={newMessage}
           onChange={handleInputChange}
-          placeholder="Type a message..."
+          placeholder={t.typeMessage}
           className="border-2 p-4 w-full rounded-2xl bg-white text-black focus:border-teal-600 outline-none"
         />
         <button
           onClick={handleSendMessage}
           className="bg-blue-500 text-white p-4 ml-2 rounded-2xl hover:scale-110 duration-200 hover:duration-200"
         >
-          Send
+          {t.send}
         </button>
       </div>
     </div>

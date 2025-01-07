@@ -1,6 +1,8 @@
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format, parse } from "date-fns";
+import { useLanguage } from "@/context/LanguageContext";
+import { sideBar__translations } from "./Translation";
 
 interface SideBarProjectsProps {
   filters: {
@@ -18,17 +20,19 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
   filters,
   onFilterChange,
 }) => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = sideBar__translations[language];
   return (
     <div className="w-full hidden md:block md:w-1/4 bg-gradient-to-b from-white to-gray-50 shadow-2xl p-8 rounded-3xl sticky sm:mt-8 md:mt-12 lg:mt-[76px] top-16 pb-8 h-full">
       <h2 className="text-2xl font-extrabold mb-8 text-center text-cyan-700">
-        Filter Options
+        {t.filterOptions}
       </h2>
 
       <div className="flex flex-col gap-5">
         {/* Start Date */}
         <div className="flex flex-col">
           <label className="block mb-2 text-sm font-semibold text-gray-700">
-            Start Date
+            {t.startDate}
           </label>
           <DatePicker
             selected={
@@ -44,20 +48,20 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
             }
             dateFormat="dd-MM-yyyy"
             className="w-full p-4 pl-7 border border-blue-300 rounded-full bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none shadow-md"
-            placeholderText="Pick a date"
+            placeholderText={t.pickDate}
           />
         </div>
 
         {/* Location */}
         <div className="flex flex-col">
           <label className="block mb-2 text-sm font-semibold text-gray-700">
-            Location
+            {t.location}
           </label>
           <input
             type="text"
             value={filters.location}
             onChange={(e) => onFilterChange("location", e.target.value)}
-            placeholder="Type location"
+            placeholder={t.typeLocation}
             className="w-full p-4 pl-7 border border-blue-300 rounded-full bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none shadow-md"
           />
         </div>
@@ -65,7 +69,7 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
         {/* Status */}
         <div className="flex flex-col">
           <label className="block mb-2 text-sm font-semibold text-gray-700">
-            Status
+            {t.status}
           </label>
           <div className="relative w-full">
             <select
@@ -94,25 +98,25 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
                 value="all"
                 className="text-gray-600 bg-white py-2 px-4 font-medium rounded-md hover:bg-gray-100"
               >
-                Any Status
+                {t.anyStatus}
               </option>
               <option
                 value="open"
                 className="text-success bg-white font-semibold py-2 px-4 rounded-md"
               >
-                Open
+                {t.open}
               </option>
               <option
                 value="completed"
                 className="text-blue-500 bg-white font-semibold py-2 px-4 rounded-md"
               >
-                Completed
+                {t.completed}
               </option>
               <option
                 value="in-progress"
                 className="text-warning bg-white font-semibold py-2 px-4 rounded-md"
               >
-                In Progress
+                {t.inProgress}
               </option>
             </select>
             <div className="absolute right-5 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -139,7 +143,7 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
         {/* Sort Order */}
         <div className="flex flex-col">
           <label className="block mb-2 text-sm font-semibold text-gray-700">
-            Sort By
+            {t.sortBy}
           </label>
           <div className="relative w-full">
             <select
@@ -151,13 +155,13 @@ const SideBarProjects: React.FC<SideBarProjectsProps> = ({
                 value="ascending"
                 className="text-gray-600 bg-white py-2 px-4 rounded-md hover:bg-gray-100"
               >
-                Date: Ascending
+                {t.dateAscending}
               </option>
               <option
                 value="descending"
                 className="text-gray-600 bg-white py-2 px-4 rounded-md hover:bg-gray-100"
               >
-                Date: Descending
+                {t.dateDescending}
               </option>
             </select>
             <div className="absolute right-5 top-1/2 transform -translate-y-1/2 pointer-events-none">

@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import Link from "next/link";
 import { api } from "@/hooks/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { register__translation } from "@/components/AuthPage/Translation";
 
 export default function VerifyPage() {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = register__translation[language];
+
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(
@@ -22,16 +27,14 @@ export default function VerifyPage() {
     if (storedEmail) {
       setEmail(storedEmail);
     } else {
-      setMessage("No email found. Please register first.");
+      setMessage(t.noEmailFound);
       setMessageType("error");
     }
   }, []);
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      setMessage(
-        "The verification code has expired. You will be moved to registration page."
-      );
+      setMessage(t.verificationCodeExpired);
       setMessageType("error");
       setTimeout(() => {
         router.push("/auth/register");
@@ -49,13 +52,13 @@ export default function VerifyPage() {
     e.preventDefault();
 
     if (!code || code.length !== 6) {
-      setMessage("Verification code must be exactly 6 digits.");
+      setMessage(t.verificationCodeLength);
       setMessageType("error");
       return;
     }
 
     if (!email) {
-      setMessage("Email is required for verification.");
+      setMessage(t.emailRequiredForVerification);
       setMessageType("error");
       return;
     }
@@ -77,7 +80,7 @@ export default function VerifyPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setMessage("Account verified successfully!");
+        setMessage(t.accountVerified);
         setMessageType("success");
         localStorage.removeItem("email");
         setTimeout(() => router.push("/auth/login"), 1500);
@@ -86,7 +89,7 @@ export default function VerifyPage() {
         setMessageType("error");
       }
     } catch (error) {
-      setMessage("Connection to server failed.");
+      setMessage(t.connectionFailed);
       setMessageType("error");
     } finally {
       setIsLoading(false);
@@ -124,10 +127,10 @@ export default function VerifyPage() {
         </button>
 
         <h1 className="text-xl sm:text-2xl md:text-3xl text-center font-bold mb-4">
-          Verify Your Email
+          {t.verifyYourEmail}
         </h1>
         <p className="text-sm sm:text-base md:text-lg text-gray-600 text-center mb-4">
-          Verification code expires in:{" "}
+          {t.verificationExpiresIn}
           <span className="font-medium text-red-500">
             {formatTime(timeLeft)}
           </span>
@@ -148,7 +151,7 @@ export default function VerifyPage() {
                 type="text"
                 name="code"
                 id="code"
-                placeholder="Enter verification code"
+                placeholder={t.enterVerificationCode}
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 required
@@ -164,7 +167,7 @@ export default function VerifyPage() {
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
           >
-            {isLoading ? "Verifying..." : "Verify"}
+            {isLoading ? t.verifying : t.verify}
           </button>
         </form>
 
@@ -173,7 +176,7 @@ export default function VerifyPage() {
             href="/auth/register"
             className="text-blue-600 hover:text-blue-800"
           >
-            Back to Registration
+            {t.backToRegistration}
           </Link>
         </div>
       </div>

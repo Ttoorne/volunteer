@@ -1,8 +1,11 @@
 "use client";
 import Link from "next/link";
 import { format, isBefore, isAfter } from "date-fns";
+import { ru, enUS, tr } from "date-fns/locale";
 import { api } from "@/hooks/api";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+import { projectCard__translations } from "./Translation";
 
 interface Project {
   _id: string;
@@ -19,11 +22,17 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [currentProject, setCurrentProject] = useState<Project>(project);
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = projectCard__translations[language];
+
+  const locale = language === "ru" ? ru : language === "tr" ? tr : enUS;
 
   const formattedStartDate = format(
     new Date(currentProject?.startDate),
-    "dd MMM yyyy"
+    "dd MMM yyyy",
+    { locale }
   );
+
   const formattedStartHour = format(
     new Date(currentProject?.startDate),
     "HH:mm"
@@ -47,7 +56,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update project status");
+        throw new Error(errorData.message || t.failedToUpdateStatus);
       }
 
       const data = await response.json();
@@ -57,7 +66,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       }));
       return data;
     } catch (error) {
-      console.error("Error updating project status:", error);
+      console.error(t.errorUpdatingStatus, error);
       throw error;
     }
   }
@@ -77,7 +86,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       newStatus = "in-progress";
     }
 
-    // Если статус изменился, обновляем его
     if (newStatus !== currentProject?.status) {
       updateProjectStatus(currentProject?._id, newStatus);
     }
@@ -101,8 +109,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           }`}
         >
           {currentProject?.status == "in-progress"
-            ? "IN PROGRESS"
-            : currentProject?.status.toUpperCase()}
+            ? t.inProgress
+            : currentProject?.status === "open"
+            ? t.open
+            : t.completed}
         </p>
       </figure>
       <div className="card-body">
@@ -308,7 +318,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         <div className="card-actions mt-5">
           <Link href={`/projects/${currentProject?._id}`} className="w-full">
             <button className="btn btn-primary text-white w-full rounded-2xl">
-              Watch
+              {t.watch}
             </button>
           </Link>
         </div>

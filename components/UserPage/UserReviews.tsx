@@ -1,10 +1,13 @@
 import { api } from "@/hooks/api";
 import { useState, useEffect } from "react";
 import { formatDistanceToNow, parseISO } from "date-fns";
+import { ru, enUS, tr } from "date-fns/locale";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import Link from "next/link";
-import ReviewsAlert from "../ReviewsAlert";
-import ConfirmationModal from "../ConfirmationModal";
+import ReviewsAlert from "../MainComponents/ReviewsAlert";
+import ConfirmationModal from "../MainComponents/ConfirmationModal";
+import { userPage__translation } from "./Translation";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Review {
   _id: string;
@@ -52,6 +55,8 @@ const UserReviews = ({
   } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = userPage__translation[language];
 
   const handleUpdate = () => {
     setRefreshData((prev) => !prev);
@@ -59,12 +64,12 @@ const UserReviews = ({
 
   const handleAddReview = async () => {
     if (!newReview.trim()) {
-      setAlert({ type: "warning", message: "Review text cannot be empty." });
+      setAlert({ type: "warning", message: t.reviewTextEmpty });
       return;
     }
 
     if (newRating === null) {
-      setAlert({ type: "warning", message: "Please select a rating." });
+      setAlert({ type: "warning", message: t.selectRating });
       return;
     }
 
@@ -81,7 +86,7 @@ const UserReviews = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add review.");
+        throw new Error(t.failedAddReview);
       }
 
       const data = await response.json();
@@ -93,12 +98,12 @@ const UserReviews = ({
       if (modal) {
         modal.close();
       }
-      setAlert({ type: "success", message: "Review added successfully." });
+      setAlert({ type: "success", message: t.reviewAddedSuccess });
     } catch (error) {
-      console.error("Error adding review:", error);
+      console.error(t.failedAddReviewRetry, error);
       setAlert({
         type: "error",
-        message: "Failed to add review. Please try again.",
+        message: t.failedAddReviewRetry,
       });
     } finally {
       setLoading(false);
@@ -128,7 +133,7 @@ const UserReviews = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete review.");
+        throw new Error(t.failedDeleteReview);
       }
 
       setReviews((prevReviews) =>
@@ -136,13 +141,13 @@ const UserReviews = ({
       );
       setNewReview("");
       setNewRating(null);
-      setAlert({ type: "info", message: "Review deleted successfully." });
+      setAlert({ type: "info", message: t.reviewDeletedSuccess });
       setRefresh((prev) => !prev);
     } catch (error) {
-      console.error("Error deleting review:", error);
+      console.error(t.errorDeletingReview, error);
       setAlert({
         type: "error",
-        message: "Failed to delete review. Please try again.",
+        message: t.failedDeleteReviewRetry,
       });
     } finally {
       handleUpdate();
@@ -153,12 +158,12 @@ const UserReviews = ({
 
   const handleEditReview = async () => {
     if (!newReview.trim()) {
-      setAlert({ type: "warning", message: "Review text cannot be empty." });
+      setAlert({ type: "warning", message: t.reviewTextEmptyAgain });
       return;
     }
 
     if (newRating === null) {
-      setAlert({ type: "warning", message: "Please select a rating." });
+      setAlert({ type: "warning", message: t.selectRatingAgain });
       return;
     }
 
@@ -178,7 +183,7 @@ const UserReviews = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update review.");
+        throw new Error(t.failedUpdateReview);
       }
 
       const data = await response.json();
@@ -194,12 +199,12 @@ const UserReviews = ({
         modal.close();
       }
       setNewRating(null);
-      setAlert({ type: "success", message: "Review updated successfully." });
+      setAlert({ type: "success", message: t.reviewUpdatedSuccess });
     } catch (error) {
-      console.error("Error editing review:", error);
+      console.error(t.errorEditingReview, error);
       setAlert({
         type: "error",
-        message: "Failed to edit review. Please try again.",
+        message: t.failedEditReviewRetry,
       });
     } finally {
       setLoading(false);
@@ -220,7 +225,7 @@ const UserReviews = ({
         setLoadingReviews(true);
         const response = await fetch(`${api}/auth/users/${userName}/reviews`);
         if (!response.ok) {
-          throw new Error("Failed to fetch reviews.");
+          throw new Error(t.failedFetchReviews);
         }
         const data = await response.json();
         setReviews(data.reviews);
@@ -232,7 +237,7 @@ const UserReviews = ({
           setHasReviewed(!!existingReview);
         }
       } catch (error) {
-        console.error("Error fetching reviews:", error);
+        console.error(t.errorFetchingReviews, error);
       } finally {
         setLoadingReviews(false);
       }
@@ -268,7 +273,7 @@ const UserReviews = ({
 
         setAvatarUrls(avatarMap);
       } catch (error) {
-        console.error("Error fetching avatars:", error);
+        console.error(t.errorFetchingAvatars, error);
       }
     };
 
@@ -277,17 +282,35 @@ const UserReviews = ({
     }
   }, [reviews]);
 
-  const formatReviewDate = (createdAt: string | undefined) => {
+  const formatReviewDate = (
+    createdAt: string | undefined,
+    language: "en" | "ru" | "tr"
+  ) => {
     if (!createdAt) {
-      return "Invalid date";
+      return t.invalidDate;
     }
 
     try {
+      let locale;
+
+      switch (language) {
+        case "ru":
+          locale = ru;
+          break;
+        case "tr":
+          locale = tr;
+          break;
+        default:
+          locale = enUS;
+          break;
+      }
+
       return formatDistanceToNow(parseISO(createdAt), {
         addSuffix: true,
+        locale,
       });
     } catch (error) {
-      return "Invalid date format";
+      return t.invalidDateFormat;
     }
   };
 
@@ -299,7 +322,7 @@ const UserReviews = ({
     <div className="flex flex-col lg:gap-1 shadow-lg p-8 rounded-xl bg-white border border-gray-200">
       {isModalOpen && (
         <ConfirmationModal
-          message="Are you sure you want to delete this review?"
+          message={t.confirmDeleteReview}
           onConfirm={confirmDeleteReview}
           onCancel={() => setIsModalOpen(false)}
         />
@@ -312,7 +335,7 @@ const UserReviews = ({
         />
       )}
       <div>
-        <h2 className="text-base sm:text-lg lg:text-xl">Reviews</h2>
+        <h2 className="text-base sm:text-lg lg:text-xl">{t.reviews}</h2>
         <div className="divider my-4 border-gray-300"></div>
       </div>
       {loadingReviews ? (
@@ -378,7 +401,7 @@ const UserReviews = ({
                   {review.text}
                 </p>
                 <p className="mt-3 text-xs sm:text-sm text-right text-gray-500">
-                  {formatReviewDate(review?.createdAt?.toString())}
+                  {formatReviewDate(review?.createdAt?.toString(), language)}
                 </p>
 
                 {currentUser && currentUser._id === review.author._id && (
@@ -403,7 +426,7 @@ const UserReviews = ({
                       >
                         <path d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a1 1 0 01-.293.207l-4 2a1 1 0 01-1.32-1.32l2-4a1 1 0 01.207-.293l9.9-9.9a2 2 0 012.828 0zM15 4l-1 1 1 1 1-1-1-1zm-2 2l-7.586 7.586L6 11.414 13.586 4 13 4zm-9.707 9.707l-1.414 1.414 1.293-2.586 1.414 1.414L3 16zm1.414-1.414L5 15l.586-.586L5 14l-.586.586z" />
                       </svg>
-                      Edit
+                      {t.edit}
                     </button>
                     <button
                       className="mt-3 text-red-600 hover:text-red-400 transition flex items-center gap-1"
@@ -421,14 +444,16 @@ const UserReviews = ({
                           clipRule="evenodd"
                         />
                       </svg>
-                      Delete
+                      {t.delete}
                     </button>
                   </div>
                 )}
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center text-lg">No reviews yet</p>
+            <p className="text-gray-500 text-center text-lg">
+              {t.noReviewsYet}
+            </p>
           )}
         </div>
       )}
@@ -460,7 +485,7 @@ const UserReviews = ({
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Add Review
+            {t.addReview}
           </button>
         </div>
       )}
@@ -480,11 +505,10 @@ const UserReviews = ({
               d="M9 12l2 2 4-4m-7 4h6a2 2 0 012 2v1a2 2 0 01-2 2H9a2 2 0 01-2-2v-1a2 2 0 012-2z"
             />
           </svg>
-          You have already left a review for this user
+          {t.alreadyLeftReview}
         </p>
       )}
 
-      {/* Модальное окно для добавления отзыва */}
       {
         <dialog
           id="addModal"
@@ -507,7 +531,7 @@ const UserReviews = ({
             </button>
 
             <h3 className="font-medium text-lg text-center text-gray-800 mb-6">
-              Write Review
+              {t.writeReview}
             </h3>
 
             {/* Textarea for review */}
@@ -517,14 +541,15 @@ const UserReviews = ({
               onChange={(e) => setNewReview(e.target.value)}
               required
               maxLength={500}
-              placeholder="Write review..."
+              placeholder={t.writingReview}
             />
             <p
               className={`text-sm text-right ${
                 newReview.length === 500 ? "text-red-500" : "text-gray-500"
               }`}
             >
-              {newReview.length}/500 characters
+              {newReview.length}
+              {t.characterLimitReview}
             </p>
 
             {/* Rating selector */}
@@ -536,7 +561,7 @@ const UserReviews = ({
                 required
               >
                 <option value="" disabled className="text-gray-400">
-                  Select rating
+                  {t.selectRatingReview}
                 </option>
                 {[1, 2, 3, 4, 5].map((value) => (
                   <option key={value} value={value} className="text-gray-800">
@@ -557,14 +582,13 @@ const UserReviews = ({
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : (
-                "Post review"
+                t.postReview
               )}{" "}
             </button>
           </div>
         </dialog>
       }
 
-      {/* Модальное окно для редактирования отзыва */}
       {
         <dialog
           id="editModal"
@@ -587,7 +611,7 @@ const UserReviews = ({
             </button>
 
             <h3 className="font-medium text-lg text-center text-gray-800 mb-6 sm:text-base sm:mb-4">
-              Edit Review
+              {t.editReview}
             </h3>
 
             {/* Textarea for review */}
@@ -604,7 +628,8 @@ const UserReviews = ({
                 newReview.length === 500 ? "text-red-500" : "text-gray-500"
               }`}
             >
-              {newReview.length}/500 characters
+              {newReview.length}
+              {t.characterLimitReview}
             </p>
 
             {/* Rating selector */}
@@ -616,7 +641,7 @@ const UserReviews = ({
                 required
               >
                 <option value="" disabled className="text-gray-400">
-                  Select rating
+                  {t.selectRating}
                 </option>
                 {[1, 2, 3, 4, 5].map((value) => (
                   <option key={value} value={value} className="text-gray-800">
@@ -637,7 +662,7 @@ const UserReviews = ({
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : (
-                "Update review"
+                t.updateReview
               )}{" "}
             </button>
           </div>

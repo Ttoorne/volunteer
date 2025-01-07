@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import { api } from "@/hooks/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { login__translation } from "@/components/AuthPage/Translation";
 
 export default function ForgotPassword() {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = login__translation[language];
+
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<
@@ -28,7 +33,7 @@ export default function ForgotPassword() {
     e.preventDefault();
 
     if (!email) {
-      setMessage("Email is required.");
+      setMessage(t.emailRequired);
       setMessageType("warning");
       return;
     }
@@ -47,14 +52,14 @@ export default function ForgotPassword() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage("Password reset link sent to your email.");
+        setMessage(t.passwordResetLinkSent);
         setMessageType("success");
       } else {
         setMessage(data.error || "Error occurred.");
         setMessageType("error");
       }
     } catch (error) {
-      setMessage("Failed to connect to the server.");
+      setMessage(t.failedToConnect);
       setMessageType("error");
     } finally {
       setIsLoading(false);
@@ -86,7 +91,7 @@ export default function ForgotPassword() {
         </button>
 
         <h1 className="text-xl sm:text-2xl text-center font-bold mb-4">
-          Forgot Password
+          {t.forgotPasswordPage}
         </h1>
 
         {message && messageType && (
@@ -113,7 +118,7 @@ export default function ForgotPassword() {
                 type="email"
                 name="email"
                 id="email"
-                placeholder="Enter your email"
+                placeholder={t.enterYourEmail}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -128,7 +133,7 @@ export default function ForgotPassword() {
             } btn btn-block text-sm sm:text-base`}
             disabled={isLoading}
           >
-            {isLoading ? "Sending..." : "Send Reset Link"}
+            {isLoading ? t.sending : t.sendResetLink}
           </button>
         </form>
       </div>

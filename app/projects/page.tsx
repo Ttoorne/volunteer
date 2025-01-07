@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import notFoundImg from "@/assets/not__found_data.png";
 import { api } from "@/hooks/api";
 import GenerateBackgroundProjects from "@/components/ProjectsPage/GenerateBackgroundProjects";
+import { useLanguage } from "@/context/LanguageContext";
+import { projectsPage__translations } from "@/components/ProjectsPage/Translation";
 
 interface Project {
   _id: string;
@@ -18,13 +20,14 @@ interface Project {
 }
 
 const ProjectsPage = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<string>("");
+  const t = projectsPage__translations[language];
 
-  // Фильтры
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -39,14 +42,14 @@ const ProjectsPage = () => {
       try {
         const response = await fetch(`${api}/projects`);
         if (!response.ok) {
-          throw new Error("Failed to fetch projects");
+          throw new Error(t.failedToFetchProjects);
         }
         const data = await response.json();
         setProjects(data);
         setFilteredProjects(data);
       } catch (error) {
         setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
+          error instanceof Error ? error.message : t.unknownErrorOccurred
         );
       } finally {
         setLoading(false);
@@ -143,7 +146,8 @@ const ProjectsPage = () => {
   if (error) {
     return (
       <div className="flex text-center justify-center items-center h-96">
-        Error: {error}
+        {t.error}
+        {error}
       </div>
     );
   }
@@ -170,7 +174,7 @@ const ProjectsPage = () => {
       <div className="flex flex-col gap-7 w-full sm:w-3/4 md:w-4/6 relative z-10">
         <div className="flex flex-col sm:flex-row justify-between items-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl text-white font-bold leading-snug text-shadow-lg">
-            Volunteer Events
+            {t.volunteerEvents}
           </h2>
 
           {/* Search Projects */}
@@ -193,7 +197,7 @@ const ProjectsPage = () => {
               onChange={(e) =>
                 handleFilterChange("searchQuery", e.target.value)
               }
-              placeholder="Search event"
+              placeholder={t.searchEvent}
               className="w-full bg-transparent placeholder-gray-500 border-none text-gray-800 focus:outline-none"
             />
           </label>
@@ -212,7 +216,7 @@ const ProjectsPage = () => {
                 className="w-60 h-60 sm:w-64 sm:h-64md:w-80 md:h-80 lg:w-96 lg:h-96"
               />
               <p className="text-base sm:text-lg lg:text-xl">
-                No matches found
+                {t.noMatchesFound}
               </p>
             </div>
           )}

@@ -1,4 +1,6 @@
 import React from "react";
+import { userPage__translation } from "../UserPage/Translation";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ConfirmationModalProps {
   message: string;
@@ -11,6 +13,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = userPage__translation[language];
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
       <div className="bg-white rounded-xl p-6 shadow-lg w-full max-w-md mx-4 md:max-w-lg">
@@ -35,13 +40,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             className="btn btn-base btn-primary text-gray-100 rounded-full px-4 py-2 sm:py-1 sm:text-sm"
             onClick={onConfirm}
           >
-            Confirm
+            {t.confirm}
           </button>
           <button
             className="btn btn-base btn-neutral text-gray-300 rounded-full px-4 py-2 sm:py-1 sm:text-sm"
             onClick={onCancel}
           >
-            Cancel
+            {t.cancel}
           </button>
         </div>
       </div>

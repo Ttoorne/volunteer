@@ -1,22 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // Import styles
+import "react-calendar/dist/Calendar.css";
 import { format } from "date-fns";
-import { enUS } from "date-fns/locale"; // Import English locale
+import { enUS, ru, tr } from "date-fns/locale";
 import Link from "next/link";
 import { api } from "@/hooks/api";
-
-// Function for formatting dates
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return format(date, "d MMMM yyyy, HH:mm", { locale: enUS });
-};
-
-const formatDateWithoutHour = (dateString: string) => {
-  const date = new Date(dateString);
-  return format(date, "d MMMM yyyy", { locale: enUS });
-};
+import { useLanguage } from "@/context/LanguageContext";
+import { mainPage_Calendar } from "./Translations";
 
 interface HomeCalendarProps {
   projects: {
@@ -32,12 +23,34 @@ interface HomeCalendarProps {
 }
 
 const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+
+  const getLocaleDate = (language: "en" | "tr" | "ru") => {
+    if (language === "ru") return ru;
+    if (language === "tr") return tr;
+    return enUS;
+  };
+
+  const formatDate = (dateString: string, language: "en" | "tr" | "ru") => {
+    const date = new Date(dateString);
+    return format(date, "d MMMM yyyy, HH:mm", {
+      locale: getLocaleDate(language),
+    });
+  };
+
+  const formatDateWithoutHour = (
+    dateString: string,
+    language: "en" | "tr" | "ru"
+  ) => {
+    const date = new Date(dateString);
+    return format(date, "d MMMM yyyy", { locale: getLocaleDate(language) });
+  };
+
   const [events, setEvents] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Default to today's date
-  const [localeLoaded, setLocaleLoaded] = useState(false); // State for checking if locale is loaded
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [localeLoaded, setLocaleLoaded] = useState(false);
 
   useEffect(() => {
-    // Check if locale is loaded
     setLocaleLoaded(true);
 
     const formattedEvents = projects.map((project) => ({
@@ -54,10 +67,8 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
     return `${api}/projects/images/${imageId}`;
   };
 
-  // Sorting events by date
   const sortedEvents = [...events].sort((a, b) => a.date - b.date);
 
-  // Events for selected date
   const eventsOnSelectedDate = selectedDate
     ? sortedEvents.filter(
         (event) =>
@@ -66,11 +77,9 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
       )
     : [];
 
-  // Filter upcoming events to show only those starting today or later
   const today = new Date();
   const upcomingEvents = sortedEvents.filter((event) => event.date >= today);
 
-  // Highlight past and today's dates
   const getTileClassName = ({ date, view }: any) => {
     if (view === "month") {
       const isToday =
@@ -79,13 +88,21 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
         date.getFullYear() === today.getFullYear();
 
       if (isToday) {
-        return "react-calendar__tile--today"; // Highlight today
+        return "react-calendar__tile--today";
       } else if (date < today) {
-        return "react-calendar__tile--past"; // Highlight past dates
+        return "react-calendar__tile--past";
       }
     }
     return "";
   };
+
+  const getLocale = () => {
+    if (language === "ru") return "ru";
+    if (language === "tr") return "tr";
+    return "en-US";
+  };
+
+  const translation = mainPage_Calendar[language];
 
   return (
     <div className="home-calendar p-6 flex flex-col items-center">
@@ -97,15 +114,17 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
             onClickDay={(date: any) => setSelectedDate(date)}
             value={selectedDate}
             className="border-2 border-gray-800 rounded-xl bg-gray-100 shadow-lg p-4 w-full lg:w-2/3"
-            locale="en-US"
+            locale={getLocale()}
             calendarType="iso8601"
           />
         )}
         <div className="events-list w-full lg:w-[48%] bg-white border border-gray-300 rounded-lg p-6">
           <h3 className="font-semibold text-xl text-gray-700 mb-6 text-center border-b pb-4 border-gray-300">
             {selectedDate
-              ? `Events on ${formatDateWithoutHour(selectedDate.toString())}`
-              : "Upcoming Events"}
+              ? `${
+                  translation.eventsOnSelectedDateText
+                } ${formatDateWithoutHour(selectedDate.toString(), language)}`
+              : translation.upcomingEventsText}
           </h3>
 
           {eventsOnSelectedDate.length > 0 ? (
@@ -121,8 +140,8 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
                       {event.title}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {formatDate(event.date.toString())} -{" "}
-                      {formatDate(event.endDate.toString())}
+                      {formatDate(event.date.toString(), language)} -{" "}
+                      {formatDate(event.endDate.toString(), language)}
                     </p>
                   </div>
                 </Link>
@@ -130,7 +149,7 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
             </ul>
           ) : (
             <p className="text-gray-600 text-center text-lg">
-              No events on this day
+              {translation.noEventsOnSelectedDateText}
             </p>
           )}
         </div>
@@ -138,7 +157,7 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
 
       <div className="upcoming-events mt-16 w-full">
         <h3 className="font-semibold text-2xl text-gray-800 mb-6 text-center">
-          All Upcoming Events
+          {translation.allUpcomingEventsText}
         </h3>
         <ul className="flex flex-wrap gap-6">
           {upcomingEvents.length > 0 ? (
@@ -166,15 +185,17 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
                   </p>
 
                   <div className="text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                    <p className="mt-2">{formatDate(event.date.toString())}</p>
-                    <p>{formatDate(event.endDate.toString())}</p>
+                    <p className="mt-2">
+                      {formatDate(event.date.toString(), language)}
+                    </p>
+                    <p>{formatDate(event.endDate.toString(), language)}</p>
                   </div>
                 </div>
               </Link>
             ))
           ) : (
             <p className="text-gray-600 text-center w-full text-base">
-              At the moment, there are no upcoming events
+              {translation.noUpcomingEventsText}
             </p>
           )}
         </ul>
@@ -183,7 +204,7 @@ const HomeCalendar: React.FC<HomeCalendarProps> = ({ projects }) => {
           href="/projects"
           className="mt-10 mx-auto block w-fit px-8 py-4 text-white font-medium text-lg bg-[#8c85f2] rounded-full hover:bg-[#7d77e0] transition-all duration-300 ease-in-out"
         >
-          View More
+          {translation.viewMoreText}
         </Link>
       </div>
     </div>

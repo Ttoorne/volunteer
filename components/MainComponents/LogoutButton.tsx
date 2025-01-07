@@ -1,7 +1,12 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/hooks/api";
+import { navbar__translations } from "./Translation";
 
 const LogoutButton = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = navbar__translations[language];
+
   const handleLogout = async () => {
     try {
       const response = await fetch(`${api}/auth/logout`, {
@@ -26,7 +31,7 @@ const LogoutButton = () => {
 
   return (
     <p onClick={handleLogout} className="cursor-pointer hover:text-red-500">
-      Logout
+      {t.logout}
     </p>
   );
 };

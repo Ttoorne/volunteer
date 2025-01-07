@@ -4,8 +4,11 @@ import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import ReviewsAlert from "../ReviewsAlert";
-import ConfirmationModal from "../ConfirmationModal";
+import { ru, enUS, tr } from "date-fns/locale";
+import ReviewsAlert from "../MainComponents/ReviewsAlert";
+import ConfirmationModal from "../MainComponents/ConfirmationModal";
+import { useLanguage } from "@/context/LanguageContext";
+import { projectReviews__translations } from "../ProjectsPage/Translation";
 
 interface Review {
   user: { _id: string; name: string; avatar: string };
@@ -42,6 +45,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
   project,
   currentUser,
 }) => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
   const [reviews, setReviews] = useState(project?.reviews || []);
   const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,6 +61,8 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
   } | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+
+  const t = projectReviews__translations[language];
 
   const loadAvatar = async (avatarId: string) => {
     try {
@@ -74,13 +80,13 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       const response = await fetch(`${api}/projects/${project?._id}/reviews`);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch reviews.");
+        throw new Error(t.failedToFetchReviews);
       }
 
       const data = await response.json();
       setReviews(data.reviews);
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      console.error(t.errorFetchingReviews, error);
     } finally {
       setLoadingReviews(false);
     }
@@ -130,14 +136,14 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
   }, [currentUser, reviews]);
 
   if (!project) {
-    return <p>Project not found</p>;
+    return <p>{t.projectNotFound}</p>;
   }
 
   const handleAddReview = async () => {
     if (!currentUser) {
       setAlert({
         type: "warning",
-        message: "You must be logged in to add a review.",
+        message: t.mustBeLoggedInToAddReview,
       });
       return;
     }
@@ -158,7 +164,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error("Failed to add review");
+          throw new Error(t.failedToAddReview);
         }
 
         const data = await response.json();
@@ -168,13 +174,13 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
         setIsModalOpen(false);
         setAlert({
           type: "success",
-          message: "Review successfully added.",
+          message: t.reviewSuccessfullyAdded,
         });
       } catch (error) {
-        console.error("Error adding review:", error);
+        console.error(t.errorAddingReview, error);
         setAlert({
           type: "error",
-          message: "Failed to add review. Please try again.",
+          message: t.failedToAddReviewPleaseTryAgain,
         });
       } finally {
         setLoading(false);
@@ -183,7 +189,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
     } else {
       setAlert({
         type: "warning",
-        message: "Please fill in all fields before submitting.",
+        message: t.pleaseFillInAllFieldsBeforeSubmitting,
       });
     }
   };
@@ -205,7 +211,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete review.");
+        throw new Error(t.failedToDeleteReview);
       }
 
       setReviews((prevReviews) =>
@@ -216,13 +222,13 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       setRefresh((prev) => !prev);
       setAlert({
         type: "info",
-        message: "Review successfully deleted.",
+        message: t.reviewSuccessfullyDeleted,
       });
     } catch (error) {
-      console.error("Error deleting review:", error);
+      console.error(t.errorDeletingReview, error);
       setAlert({
         type: "error",
-        message: "Failed to delete review. Please try again.",
+        message: t.failedToDeleteReviewPleaseTryAgain,
       });
     } finally {
       setIsConfirmModalOpen(false);
@@ -250,7 +256,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to edit review.");
+        throw new Error(t.failedToEditReview);
       }
 
       const updatedReview = await response.json();
@@ -265,13 +271,13 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       setIsModalOpen(false);
       setAlert({
         type: "success",
-        message: "Review successfully updated.",
+        message: t.reviewSuccessfullyUpdated,
       });
     } catch (error) {
-      console.error("Error editing review:", error);
+      console.error(t.errorEditingReview, error);
       setAlert({
         type: "error",
-        message: "Failed to edit review. Please try again.",
+        message: t.failedToEditReviewPleaseTryAgain,
       });
     } finally {
       setLoading(false);
@@ -279,17 +285,35 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
     }
   };
 
-  const formatReviewDate = (createdAt: string | undefined) => {
+  const formatReviewDate = (
+    createdAt: string | undefined,
+    language: "en" | "ru" | "tr"
+  ) => {
     if (!createdAt) {
-      return "Invalid date";
+      return t.invalidDate;
     }
 
     try {
+      let locale;
+
+      switch (language) {
+        case "ru":
+          locale = ru;
+          break;
+        case "tr":
+          locale = tr;
+          break;
+        default:
+          locale = enUS;
+          break;
+      }
+
       return formatDistanceToNow(parseISO(createdAt), {
         addSuffix: true,
+        locale,
       });
     } catch (error) {
-      return "Invalid date format";
+      return t.invalidDateFormat;
     }
   };
 
@@ -309,7 +333,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
     <div className="reviews-section space-y-6 bg-gray-100 p-6 sm:p-8 md:px-12 lg:px-16">
       {isConfirmModalOpen && (
         <ConfirmationModal
-          message="Are you sure you want to delete this review?"
+          message={t.areYouSureDeleteReview}
           onConfirm={confirmDeleteReview}
           onCancel={() => setIsConfirmModalOpen(false)}
         />
@@ -322,7 +346,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
         />
       )}
       <h3 className="text-2xl font-semibold text-gray-800 mb-6 flex justify-between items-center">
-        <span>Reviews</span>
+        <span>{t.reviews}</span>
         {+averageRating !== 0 ? (
           <div className="flex items-center gap-1">
             <span
@@ -355,11 +379,9 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       </h3>
 
       {reviews.length === 0 && project.organizer?._id !== currentUser?._id ? (
-        <p className="text-gray-600 text-center">
-          No reviews yet. Be the first to review this project!
-        </p>
+        <p className="text-gray-600 text-center">{t.noReviewsYet}</p>
       ) : reviews.length === 0 ? (
-        <p className="text-gray-600 text-center">You are the organizer</p>
+        <p className="text-gray-600 text-center">{t.youAreTheOrganizer}</p>
       ) : loadingReviews ? (
         <div className="h-full bg-transparent flex justify-center items-center ">
           <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -424,7 +446,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                 {review.comment}
               </p>
               <span className="text-gray-500 text-sm md:text-base block text-right">
-                {formatReviewDate(review.createdAt.toString())}
+                {formatReviewDate(review.createdAt.toString(), language)}
               </span>
               {currentUser?._id === review.user._id && (
                 <div className="review-actions flex flex-wrap space-x-4 mt-4 justify-center sm:justify-end">
@@ -445,7 +467,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                     }}
                     className="flex items-center gap-2 bg-teal-600 text-white font-medium duration-150 hover:bg-teal-700 rounded-full px-4 py-2 md:px-5 md:py-2.5 shadow-md hover:shadow-lg transition-transform transform hover:scale-105"
                   >
-                    Edit
+                    {t.edit}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="w-5 h-5"
@@ -479,7 +501,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                    Delete
+                    {t.delete}
                   </button>
                 </div>
               )}
@@ -495,14 +517,12 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
             onClick={() => setIsModalOpen(true)}
             className="mt-4 w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 duration-150 focus:ring-teal-500"
           >
-            Add Your Review
+            {t.addYourReview}
           </button>
         )}
 
       {hasReviewed && (
-        <p className="text-gray-600 text-center">
-          You have already submitted a review for this project
-        </p>
+        <p className="text-gray-600 text-center">{t.alreadySubmittedReview}</p>
       )}
 
       {isModalOpen && (
@@ -515,7 +535,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
               ✕
             </button>
             <h4 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-4">
-              {editingReview ? "Edit Your Review" : "Add Your Review"}
+              {editingReview ? t.editYourReview : t.addYourReview}
             </h4>
 
             <textarea
@@ -523,7 +543,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
               onChange={(e) =>
                 setNewReview({ ...newReview, comment: e.target.value })
               }
-              placeholder="Write your comment here..."
+              placeholder={t.writeYourCommentHere}
               className="w-full p-2 sm:p-4 bg-gray-100 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm sm:text-base"
               rows={4}
             ></textarea>
@@ -533,7 +553,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                 htmlFor="rating"
                 className="block text-gray-700 font-medium mb-2 text-sm sm:text-base"
               >
-                Rate the project
+                {t.rateTheProject}
               </label>
 
               <div className="flex space-x-1 justify-center">
@@ -579,7 +599,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                   {loading ? (
                     <span className="loading loading-spinner loading-lg text-success"></span>
                   ) : (
-                    "Save changes"
+                    t.saveChanges
                   )}
                 </button>
               ) : (
@@ -593,7 +613,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                   {loading ? (
                     <span className="loading loading-spinner loading-lg text-success"></span>
                   ) : (
-                    "Submit"
+                    t.submit
                   )}
                 </button>
               )}

@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
+import { ru, enUS, tr } from "date-fns/locale";
 import { fetchUserData } from "@/server/utils/fetchUserData";
 import { api } from "@/hooks/api";
-
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import ProjectEditModal from "@/components/ProjectPage/ProjectEditModal";
 import GenerateBackground from "@/components/ProjectPage/GenerateBackground";
 import Link from "next/link";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import Image from "next/image";
 import ProjectReviews from "@/components/ProjectPage/ProjectReviews";
+import ConfirmationModal from "@/components/MainComponents/ConfirmationModal";
+import { useLanguage } from "@/context/LanguageContext";
+import { projectDetails__translations } from "@/components/ProjectsPage/Translation";
 
 interface CurrentUser {
   _id: string;
@@ -58,6 +61,7 @@ interface Project {
 
 const ProjectPage = () => {
   const { id } = useParams();
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -71,8 +75,11 @@ const ProjectPage = () => {
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
   const [organizer, setOrganizer] = useState<Organizer | undefined>(undefined);
   const [refresh, setRefresh] = useState<boolean>(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const background = GenerateBackground();
+
+  const t = projectDetails__translations[language];
 
   const API_BASE_URL = `${api}/projects`;
 
@@ -83,12 +90,12 @@ const ProjectPage = () => {
         credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to fetch token");
+      if (!response.ok) throw new Error(t.failedToFetchToken);
 
       const data = await response.json();
       setToken(data.token);
     } catch (error) {
-      console.error("Error fetching token:", error);
+      console.error(t.errorFetchingToken, error);
     }
   };
 
@@ -104,7 +111,7 @@ const ProjectPage = () => {
         const userData = await fetchUserData(token);
         setCurrentUser(userData);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error(t.errorFetchingUserData, error);
       }
     };
 
@@ -117,14 +124,14 @@ const ProjectPage = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/${id}`);
       if (!response.ok)
-        throw new Error(`Error fetching project: ${response.statusText}`);
+        throw new Error(`${t.errorFetchingProject} ${response.statusText}`);
 
       const data: Project = await response.json();
       setProject(data);
       setOrganizer(data?.organizer);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
+        error instanceof Error ? error.message : t.unknownErrorOccurred;
       setAlertData({ type: "error", message: errorMessage });
     } finally {
       setLoading(false);
@@ -172,17 +179,17 @@ const ProjectPage = () => {
         body: JSON.stringify({ participants: [{ _id: currentUser._id }] }),
       });
 
-      if (!response.ok) throw new Error("Failed to join the project");
+      if (!response.ok) throw new Error(t.failedToJoinProject);
 
       const updatedProject = await response.json();
       setProject(updatedProject.project);
       setAlertData({
         type: "success",
-        message: "Successfully joined the project!",
+        message: t.successfullyJoinedProject,
       });
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
+        error instanceof Error ? error.message : t.unknownErrorOccurred;
       setAlertData({ type: "warning", message: errorMessage });
     }
   };
@@ -203,39 +210,34 @@ const ProjectPage = () => {
     setEditModalOpen(false);
   };
 
-  const deleteProject = async (projectId: string) => {
-    try {
-      const isConfirmed = window.confirm(
-        "Are you sure you want to delete this project? This action cannot be undone."
-      );
-      if (!isConfirmed) return;
+  const deleteProject = async () => {
+    setIsConfirmModalOpen(true);
+  };
 
-      const response = await fetch(`${API_BASE_URL}/${projectId}`, {
+  const deleteProjectConfirm = async () => {
+    if (!project || !project._id) {
+      alert(t.projectIdMissingOrInvalid);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/${project?._id}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete project");
+        throw new Error(errorData.message || t.failedToDeleteProject);
       }
 
-      const result = await response.json();
-      alert("Project deleted successfully!");
-      return result;
+      await response.json();
+      setAlertData({ type: "info", message: t.projectDeletedSuccessfully });
+      window.location.href = "/projects";
     } catch (error: any) {
       console.error("Error deleting project:", error.message);
-      alert(`Error: ${error.message}`);
+      setAlertData({ type: "error", message: error.message });
+    } finally {
+      setIsConfirmModalOpen(false);
     }
-  };
-
-  const handleDeleteProject = async (project: Project | null) => {
-    if (!project || !project._id) {
-      alert("Project ID is missing or invalid.");
-      return;
-    }
-
-    await deleteProject(project._id);
-    window.location.href = "/projects";
   };
 
   const handleLeaveProject = async () => {
@@ -252,18 +254,18 @@ const ProjectPage = () => {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to leave the project");
+      if (!response.ok) throw new Error(t.failedToLeaveProject);
 
       const updatedProject = await response.json();
       setProject(updatedProject.project);
       console.log("Updated project:", updatedProject.project);
       setAlertData({
         type: "info",
-        message: "Successfully left the project!",
+        message: t.successfullyLeftProject,
       });
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
+        error instanceof Error ? error.message : t.unknownErrorOccurred;
       setAlertData({ type: "warning", message: errorMessage });
     }
   };
@@ -271,8 +273,6 @@ const ProjectPage = () => {
   const isUserParticipant = project?.participants.some(
     (participant) => participant?.user?._id === currentUser?._id
   );
-
-  console.log(project);
 
   if (loading) {
     return (
@@ -292,11 +292,14 @@ const ProjectPage = () => {
     );
   }
 
+  const locale = language === "ru" ? ru : language === "tr" ? tr : enUS;
+
   const formattedStartDate =
     project?.startDate &&
-    format(new Date(project.startDate), "dd MMM yyyy HH:mm");
+    format(new Date(project.startDate), "dd MMM yyyy HH:mm", { locale });
   const formattedEndDate =
-    project?.endDate && format(new Date(project.endDate), "dd MMM yyyy HH:mm");
+    project?.endDate &&
+    format(new Date(project.endDate), "dd MMM yyyy HH:mm", { locale });
 
   return (
     <div
@@ -310,7 +313,13 @@ const ProjectPage = () => {
       }}
     >
       {alertData && <Alert type={alertData.type} message={alertData.message} />}
-
+      {isConfirmModalOpen && (
+        <ConfirmationModal
+          message={t.areYouSureDeleteProject}
+          onConfirm={deleteProjectConfirm}
+          onCancel={() => setIsConfirmModalOpen(false)}
+        />
+      )}
       {/* Modals */}
       {isEditModalOpen && (
         <ProjectEditModal
@@ -328,12 +337,12 @@ const ProjectPage = () => {
           </h1>
           <div className="text-xl font-semibold flex justify-between items-center">
             <div>
-              <span>Organized by: </span>
+              <span>{t.organizedBy}</span>
               <Link
                 href={`/profile/${project?.organizer?.name}`}
                 className="font-semibold text-gray-200 hover:text-gray-300 transition duration-200 ease-in-out "
               >
-                {organizer?.name || "Unknown"}
+                {organizer?.name || t.unknown}
               </Link>
             </div>
             {project?.organizer?.name !== currentUser?.name && currentUser ? (
@@ -370,7 +379,7 @@ const ProjectPage = () => {
                     ></path>{" "}
                   </g>
                 </svg>
-                <p className="text-lg">Message the organizer</p>
+                <p className="text-lg">{t.messageTheOrganizer}</p>
               </Link>
             ) : (
               <></>
@@ -383,13 +392,13 @@ const ProjectPage = () => {
                 onClick={handleOpenEditModal}
                 className="px-5 py-2 bg-white text-green-700 duration-200 hover:scale-110  hover:duration-200  text-md font-bold rounded-full shadow-md"
               >
-                Edit
+                {t.edit}
               </button>
               <button
-                onClick={() => handleDeleteProject(project)}
+                onClick={deleteProject}
                 className="px-5 py-2 bg-white text-red-700 duration-200 hover:scale-110  hover:duration-200  text-md font-bold rounded-full shadow-md"
               >
-                Delete
+                {t.delete}
               </button>
             </div>
           )}
@@ -410,14 +419,14 @@ const ProjectPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div className="p-5 bg-white border border-gray-200 rounded-2xl shadow-md">
               <h3 className="font-semibold text-gray-800 text-xl mb-3">
-                Location
+                {t.location}
               </h3>
               <p className="text-gray-700">{project?.location}</p>
             </div>
             {project?.endDate && (
               <div className="p-5 bg-white border border-gray-200 rounded-2xl shadow-md">
                 <h3 className="font-semibold text-gray-800 text-xl mb-3">
-                  End Date
+                  {t.endDate}
                 </h3>
                 <p className="text-gray-700">{formattedEndDate || "TBD"}</p>
               </div>
@@ -427,7 +436,7 @@ const ProjectPage = () => {
           {/* Participants Section */}
           <div>
             <h3 className="font-semibold text-gray-900 text-2xl mb-6">
-              Participants ({`${project?.participants.length}`})
+              {t.participants}({`${project?.participants.length}`})
             </h3>
             <div className="carousel rounded-box flex flex-wrap gap-4">
               {project?.participants.map((participant) => (
@@ -466,7 +475,7 @@ const ProjectPage = () => {
                       onClick={handleJoinProject}
                       className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
                     >
-                      Join Event
+                      {t.joinEvent}
                     </button>
                   )}
                 {isUserParticipant && currentUser && (
@@ -474,7 +483,7 @@ const ProjectPage = () => {
                     onClick={handleLeaveProject}
                     className="active:scale-95 hover:brightness-95 mt-8 w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition ease-in-out"
                   >
-                    Leave Event
+                    {t.leaveEvent}
                   </button>
                 )}
               </>
@@ -484,7 +493,7 @@ const ProjectPage = () => {
           {/* Image Gallery */}
           <div>
             <h3 className="font-semibold text-gray-900 text-2xl mb-6">
-              Gallery
+              {t.gallery}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
               {project?.images.map((imageId) => (
@@ -522,8 +531,7 @@ const ProjectPage = () => {
         {/* Footer Section */}
         <div className="bg-gray-50 p-8 text-center border-t border-gray-200">
           <p className="text-sm text-gray-600">
-            © {new Date().getFullYear()} Volunteer Platform. All rights
-            reserved.
+            © {new Date().getFullYear()} {t.volunteerPlatform}
           </p>
         </div>
       </div>

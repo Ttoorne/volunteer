@@ -11,6 +11,16 @@ import HomeImpact from "@/components/MainPage/HomeImpact";
 import HomeFaq from "@/components/MainPage/HomeFaq";
 import headerImg from "@/assets/main_header__bg.png";
 import { fetchUserData } from "@/server/utils/fetchUserData";
+import { useLanguage } from "@/context/LanguageContext";
+import {
+  mainPage_activeProjects,
+  mainPage_faq,
+  mainPage_footer,
+  mainPage_header,
+  mainPage_upcomingEvents,
+  mainPage_volunteerTips,
+  translationsImpact,
+} from "@/components/MainPage/Translations";
 
 interface Project {
   _id: string;
@@ -29,6 +39,8 @@ interface User {
 }
 
 const MainPage = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -112,6 +124,15 @@ const MainPage = () => {
     setFilteredProjects(filtered);
   }, [projects]);
 
+  // translations
+  const translationsHeader = mainPage_header(token, loadingUser, user?.name);
+  const translationsActiveEvents = mainPage_activeProjects[language];
+  const translationsUpcomingEvents = mainPage_upcomingEvents[language];
+  const translationsTips = mainPage_volunteerTips[language];
+  const translationsImpactOverview = translationsImpact(language);
+  const translationFAQ = mainPage_faq[language];
+  const translationFooter = mainPage_footer[language];
+
   return (
     <div className="flex flex-col gap-16 bg-indigo-50">
       {/* Header section */}
@@ -127,15 +148,10 @@ const MainPage = () => {
         ) : (
           <div className="relative flex flex-col gap-5 text-white p-6 md:p-12 rounded-lg shadow-2xl z-50 bg-black bg-opacity-30 w-full max-w-3xl">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-snug text-center animate-fade-in">
-              {token && !loadingUser
-                ? `Welcome back, ${user?.name}!`
-                : `Welcome to Volunteer!`}
+              {translationsHeader[language].welcome}
             </h2>
             <p className="text-base md:text-lg lg:text-xl text-center animate-fade-in">
-              {token && !loadingUser
-                ? `We are excited to have you here. Let's make the world a better place together through volunteering!`
-                : `We are excited to have you here. Join us in making the world a
-              better place through volunteering!`}
+              {translationsHeader[language].description}
             </p>
           </div>
         )}
@@ -173,16 +189,16 @@ const MainPage = () => {
       {/* Active Projects section */}
       <section className="mt-6 px-4 sm:px-8 lg:px-10">
         <h2 className="text-3xl font-semibold mb-3 ml-4 sm:ml-8 lg:ml-16">
-          Active Projects
+          {translationsActiveEvents.title}
         </h2>
         <div className="relative flex items-center px-4 sm:px-5 lg:px-5">
           {filteredProjects.length === 0 ? (
             <div className="text-center py-10 mx-auto">
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
-                No active projects at the moment.
+                {translationsActiveEvents.noProjects}
               </h2>
               <p className="text-gray-600 text-sm sm:text-base mt-2">
-                Check back later for new opportunities.
+                {translationsActiveEvents.checkLater}
               </p>
             </div>
           ) : (
@@ -211,7 +227,7 @@ const MainPage = () => {
                       className="flex flex-col gap-2 rounded-full p-4 sm:p-6 lg:p-8 hover:bg-gray-100 transition"
                     >
                       <span className="text-gray-800 text-lg sm:text-xl">
-                        View All Projects
+                        {translationsActiveEvents.viewAll}
                       </span>
                       <span className="rounded-full text-xl sm:text-2xl bg-gray-800 text-white flex items-center justify-center">
                         →
@@ -238,13 +254,12 @@ const MainPage = () => {
       {/* Calendar section */}
       <section className="mt-6 px-10">
         <h2 className="text-3xl font-semibold ml-4 sm:ml-8 lg:ml-16">
-          Upcoming Events
+          {translationsUpcomingEvents.title}
         </h2>
 
         <div className="p-5">
           <p className="text-gray-600 ml-7 text-base">
-            Here you can view upcoming events and sign up for volunteering
-            opportunities.
+            {translationsUpcomingEvents.description}
           </p>
           <div className="mt-4">
             <HomeCalendar projects={projects} />
@@ -255,10 +270,10 @@ const MainPage = () => {
       {/* Volunteer Resources Section */}
       <section className="mt-6 px-6 sm:px-8 md:px-10">
         <h3 className="font-medium text-2xl sm:text-3xl text-gray-800 mb-4 mr-auto ml-4 sm:ml-28 w-fit">
-          Volunteer Tips
+          {translationsTips.title}
         </h3>
         <div className="flex flex-col md:flex-row justify-center md:justify-between md:items-center">
-          <HomeTips />
+          <HomeTips translationTips={translationsTips} />
           <Image
             src={tipsImg}
             alt="Communicate"
@@ -271,19 +286,19 @@ const MainPage = () => {
       {/* Impact Overview Section */}
       <section className="mt-6 px-10">
         <h2 className="text-2xl font-semibold mb-4 text-center">
-          Impact Overview
+          {translationsImpactOverview.impactOverviewTitle}
         </h2>
 
-        <HomeImpact />
+        <HomeImpact translationsImpactOverview={translationsImpactOverview} />
       </section>
 
       {/* FAQ Section */}
       <section className="mt-6">
         <h2 className="text-3xl font-medium ml-7 lg:ml-14">
-          Frequently Asked Questions
+          {translationFAQ.title}
         </h2>
 
-        <HomeFaq />
+        <HomeFaq translationFAQ={translationFAQ} />
       </section>
 
       {/* Call to Action section */}
@@ -294,18 +309,17 @@ const MainPage = () => {
 
         {/* Section Content */}
         <h2 className="text-2xl md:text-3xl font-bold mb-4 drop-shadow-lg">
-          Ready to Make a Difference?
+          {translationFooter.readyToMakeADifference}
         </h2>
         <p className="text-base md:text-lg mb-6 drop-shadow-md px-4 md:px-0">
-          Join us today and start volunteering! Your time and effort can change
-          lives.
+          {translationFooter.joinUsText}
         </p>
         {token && !loadingUser ? (
           <Link
             href={"/projects"}
             className="relative bg-white text-blue-600 font-semibold py-2 px-6 md:py-3 md:px-8 rounded-full shadow-md hover:shadow-lg hover:bg-blue-100 transition-all duration-300 ease-in-out"
           >
-            Make a Difference!
+            {translationFooter.makeADifferenceButton}
             <span className="absolute inset-0 bg-blue-200 opacity-0 rounded-full transition-opacity duration-300 hover:opacity-50"></span>
           </Link>
         ) : (
@@ -313,7 +327,8 @@ const MainPage = () => {
             href={"/auth/register"}
             className="relative bg-white text-blue-600 font-semibold py-2 px-6 md:py-3 md:px-8 rounded-full shadow-md hover:shadow-lg hover:bg-blue-100 transition-all duration-300 ease-in-out"
           >
-            Join as a Volunteer
+            {translationFooter.joinAsVolunteerButton}
+
             <span className="absolute inset-0 bg-blue-200 opacity-0 rounded-full transition-opacity duration-300 hover:opacity-50"></span>
           </Link>
         )}

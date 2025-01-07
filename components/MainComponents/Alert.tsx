@@ -11,12 +11,11 @@ const Alert: React.FC<AlertProps> = ({ type, message }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Убираем alert через 5 секунд
     const timer = setTimeout(() => {
       setIsVisible(false);
     }, 5000);
 
-    return () => clearTimeout(timer); // Очистка таймера при размонтировании
+    return () => clearTimeout(timer);
   }, []);
 
   const getAlertClass = () => {

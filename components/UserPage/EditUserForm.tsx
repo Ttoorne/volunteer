@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { userPage__translation } from "./Translation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export interface ProfileSectionProps {
   section: string;
@@ -59,6 +61,8 @@ const EditUserForm = ({
     initialValues
   );
   const [loading, setLoading] = useState(false);
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = userPage__translation[language];
 
   const handleChange = (
     field: string,
@@ -84,7 +88,7 @@ const EditUserForm = ({
         <div className="flex flex-col space-y-3">
           <div className="form-control">
             <label className="input input-bordered flex items-center gap-4 text-slate-500 bg-white">
-              Avatar
+              {t.avatar}
               <input
                 type="file"
                 accept="image/*"
@@ -94,7 +98,7 @@ const EditUserForm = ({
           </div>
           <div className="form-control">
             <label className="input input-bordered flex items-center gap-4 text-slate-500 bg-white">
-              First Name
+              {t.firstName}
               <input
                 type="text"
                 className="grow bg-white w-32 max-w-sm text-black"
@@ -106,7 +110,7 @@ const EditUserForm = ({
           </div>
           <div className="form-control">
             <label className="input input-bordered flex items-center gap-4 text-slate-500 bg-white">
-              Last Name
+              {t.lastName}
               <input
                 type="text"
                 className="grow bg-white w-32 max-w-sm text-black"
@@ -119,18 +123,19 @@ const EditUserForm = ({
           <div className="form-control">
             <label className="form-control">
               <div className="label">
-                <span className="label-text text-slate-500">Your Bio</span>
+                <span className="label-text text-slate-500">{t.yourBio}</span>
               </div>
               <textarea
                 className="textarea textarea-bordered h-24 bg-white"
-                placeholder="Write something about yourself"
+                placeholder={t.writeSomethingAboutYourself}
                 value={(values as PersonalInfo).bio ?? ""}
                 onChange={(e) => handleChange("bio", e.target.value)}
                 maxLength={150}
               ></textarea>
               <div className="text-sm text-gray-500 w-full mt-1 text-right">
                 <span>
-                  {((values as PersonalInfo).bio ?? "").length}/150 characters
+                  {((values as PersonalInfo).bio ?? "").length}
+                  {t.characterLimit}
                 </span>
               </div>
             </label>
@@ -144,7 +149,7 @@ const EditUserForm = ({
         <div className="flex flex-col gap-2">
           <div className="form-control pb-1">
             <label className="input input-bordered flex items-center gap-4 text-slate-500 bg-white">
-              Phone
+              {t.phone}
               <input
                 type="number"
                 className="grow bg-white w-32 max-w-sm text-black"
@@ -156,7 +161,7 @@ const EditUserForm = ({
           </div>
           <div className="form-control pb-1">
             <label className="input input-bordered flex items-center gap-4 text-slate-500 bg-white">
-              Location
+              {t.location}
               <input
                 type="text"
                 className="grow bg-white w-32 max-w-sm text-black"
@@ -186,7 +191,7 @@ const EditUserForm = ({
           </button>
         </form>
         <h2 className="text-base lg:text-lg pb-4">
-          Edit{" "}
+          {t.edit}{" "}
           {section
             .replace(/([a-z])([A-Z])/g, "$1 $2")
             .replace(/^./, (str) => str.toUpperCase())}
@@ -200,7 +205,7 @@ const EditUserForm = ({
               try {
                 onSave(values);
               } catch (error) {
-                console.error("Ошибка при сохранении:", error);
+                console.error(t.saveError, error);
               } finally {
                 setLoading(false);
               }
@@ -211,7 +216,7 @@ const EditUserForm = ({
             {loading ? (
               <span className="loading loading-spinner loading-md"></span>
             ) : (
-              <span>Save</span>
+              <span>{t.save}</span>
             )}
           </button>
         </div>

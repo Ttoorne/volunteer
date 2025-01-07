@@ -1,5 +1,7 @@
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/hooks/api";
 import Link from "next/link";
+import { mainPage_Card } from "./Translations";
 
 interface HomeProjectCardProps {
   project: {
@@ -17,6 +19,8 @@ interface HomeProjectCardProps {
 const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
   const { title, description, images, startDate, endDate, location, status } =
     project;
+
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
 
   const statusColor =
     status === "open"
@@ -38,6 +42,8 @@ const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
     return `${day}.${month}.${year}, ${hours}:${minutes}`;
   };
 
+  const translation = mainPage_Card[language];
+
   return (
     <div className="carousel-item bg-white border-gray-300 border-2 rounded-xl shadow-md hover:border-teal-600 transition-all w-full sm:w-[48%] md:w-[31%] mx-auto flex flex-col">
       {/* Image */}
@@ -49,7 +55,7 @@ const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
         />
       ) : (
         <div className="w-full h-40 sm:h-48 md:h-56 bg-gray-200 flex items-center justify-center text-gray-500 rounded-t-xl">
-          No Image
+          {translation.noImageText}
         </div>
       )}
 
@@ -70,15 +76,16 @@ const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
         {/* Dates and Location */}
         <div className="text-gray-500 text-base mb-4 mt-auto">
           <p>
-            <span className="font-semibold">Start:</span>{" "}
+            <span className="font-semibold"> {translation.startText}</span>{" "}
             {formatDateTime(startDate)}
           </p>
           <p>
-            <span className="font-semibold">End:</span>{" "}
+            <span className="font-semibold">{translation.endText}</span>{" "}
             {formatDateTime(endDate)}
           </p>
           <p>
-            <span className="font-semibold">Location:</span> {location}
+            <span className="font-semibold">{translation.locationText}</span>{" "}
+            {location}
           </p>
         </div>
 
@@ -87,13 +94,17 @@ const HomeProjectCard: React.FC<HomeProjectCardProps> = ({ project }) => {
           <div
             className={`inline-block p-3 rounded-xl text-sm font-medium ${statusColor}`}
           >
-            {status === "in-progress" ? "IN PROGRESS" : status.toUpperCase()}
+            {status === "in-progress"
+              ? translation.inProgressText
+              : status === "open"
+              ? translation.openText
+              : translation.completedText}
           </div>
           <Link
             href={`/project/${project._id}`}
             className="bg-teal-700 text-white p-3 rounded-2xl hover:bg-teal-600 transition duration-300"
           >
-            Watch Project
+            {translation.watchEventText}
           </Link>
         </div>
       </div>

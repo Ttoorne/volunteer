@@ -3,10 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import { api } from "@/hooks/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { register__translation } from "@/components/AuthPage/Translation";
 
 export default function RegisterPage() {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = register__translation[language];
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -39,23 +44,23 @@ export default function RegisterPage() {
     const { name, email, password, confirmPassword } = form;
     if (!name || !email || !password || !confirmPassword) {
       return {
-        message: "All fields are required.",
+        message: t.allFieldsRequired,
         type: "warning" as "warning",
       };
     }
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (!emailPattern.test(email)) {
-      return { message: "Invalid email format.", type: "warning" as "warning" };
+      return { message: t.invalidEmailFormat, type: "warning" as "warning" };
     }
     if (password.length < 8) {
       return {
-        message: "Password must be at least 8 characters long.",
+        message: t.passwordMinLength,
         type: "warning" as "warning",
       };
     }
     if (password !== confirmPassword) {
       return {
-        message: "Passwords do not match.",
+        message: t.passwordsDoNotMatch,
         type: "warning" as "warning",
       };
     }
@@ -88,7 +93,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage("Registration successful! Please verify your email.");
+        setMessage(t.registrationSuccessful);
         setMessageType("success");
 
         setForm({ name: "", email: "", password: "", confirmPassword: "" });
@@ -98,11 +103,11 @@ export default function RegisterPage() {
 
         router.push("/auth/register/verify");
       } else {
-        setMessage(data.error || "Error occurred during registration");
+        setMessage(data.error || t.errorOccurred);
         setMessageType("error");
       }
     } catch (error) {
-      setMessage("Failed to connect to the server.");
+      setMessage(t.failedToConnect);
       setMessageType("error");
     } finally {
       setIsLoading(false);
@@ -134,16 +139,16 @@ export default function RegisterPage() {
         </button>
 
         <h1 className="text-xl sm:text-2xl md:text-3xl text-center font-bold mb-4">
-          Register
+          {t.register}
         </h1>
         <h3 className="flex flex-col sm:flex-row gap-2 mb-4 text-sm sm:text-base">
-          Already have an account?
+          {t.alreadyHaveAccount}
           <Link
             href="/auth/login"
             className="link-info hover:underline
           "
           >
-            Sign in
+            {t.signIn}
           </Link>
         </h3>
 
@@ -170,7 +175,7 @@ export default function RegisterPage() {
                 type="text"
                 name="name"
                 id="name"
-                placeholder="Your name"
+                placeholder={t.yourName}
                 value={form.name}
                 onChange={handleChange}
                 required
@@ -196,7 +201,7 @@ export default function RegisterPage() {
                 type="email"
                 name="email"
                 id="email"
-                placeholder="Your email"
+                placeholder={t.yourEmail}
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -225,7 +230,7 @@ export default function RegisterPage() {
                 type="password"
                 name="password"
                 id="password"
-                placeholder="Your password"
+                placeholder={t.yourPassword}
                 value={form.password}
                 onChange={handleChange}
                 required
@@ -254,7 +259,7 @@ export default function RegisterPage() {
                 type="password"
                 name="confirmPassword"
                 id="confirmPassword"
-                placeholder="Confirm password"
+                placeholder={t.confirmPassword}
                 value={form.confirmPassword}
                 onChange={handleChange}
                 required
@@ -269,7 +274,7 @@ export default function RegisterPage() {
             } btn btn-block`}
             disabled={isLoading}
           >
-            {isLoading ? "Registering" : "Register"}
+            {isLoading ? t.registering : t.register}
           </button>
         </form>
       </div>

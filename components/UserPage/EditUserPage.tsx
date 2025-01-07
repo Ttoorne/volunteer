@@ -6,7 +6,9 @@ import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
 import { api } from "@/hooks/api";
 import Link from "next/link";
 import UserReviews from "./UserReviews";
-import ConfirmationModal from "../ConfirmationModal";
+import ConfirmationModal from "../MainComponents/ConfirmationModal";
+import { useLanguage } from "@/context/LanguageContext";
+import { userPage__translation } from "./Translation";
 
 interface Review {
   _id: string;
@@ -81,6 +83,8 @@ const EditUserPage = ({
   >(null);
   const [loadingCompletedProjects, setLoadingCompletedProjects] =
     useState(false);
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = userPage__translation[language];
 
   const fetchCompletedProjects = async () => {
     try {
@@ -90,13 +94,13 @@ const EditUserPage = ({
         `${api}/auth/users/${profileData?.name}/completedProjects`
       );
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`${t.httpError} ${response.status}`);
       }
 
       const data = await response.json();
       setCompletedProjects(data.completedProjects);
     } catch (err) {
-      console.error("Error fetching completed projects:", err);
+      console.error(t.failedUpdateProfile, err);
     } finally {
       setLoadingCompletedProjects(false);
     }
@@ -154,7 +158,7 @@ const EditUserPage = ({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to update profile");
+        throw new Error(data.error || t.failedUpdateProfile);
       }
 
       setProfileData((prev) => ({
@@ -163,7 +167,7 @@ const EditUserPage = ({
         avatar: data.avatar || prev.avatar,
       }));
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error(t.errorUpdatingProfile, error);
     } finally {
       setLoading(false);
     }
@@ -196,14 +200,14 @@ const EditUserPage = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete account.");
+        throw new Error(errorData.error || t.failedDeleteAccount);
       }
 
-      alert("Account deleted successfully.");
+      alert(t.accountDeletedSuccess);
       window.location.href = "/";
     } catch (error) {
-      console.error("Error deleting account:", error);
-      alert(error || "An error occurred while deleting the account.");
+      console.error(t.errorDeletingAccount, error);
+      alert(error || t.errorDeletingAccount);
     } finally {
       setIsConfirmModalOpen(false);
     }
@@ -217,7 +221,7 @@ const EditUserPage = ({
     <div className="z-10 relative p-6 gap-10 flex flex-col w-11/12 m-auto">
       {isConfirmModalOpen && (
         <ConfirmationModal
-          message="Are you sure you want to delete your account?"
+          message={t.confirmDeleteAccount}
           onConfirm={confirmDeleteUser}
           onCancel={() => setIsConfirmModalOpen(false)}
         />
@@ -225,16 +229,14 @@ const EditUserPage = ({
       {/* Personal Info */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white">
         <div className="flex justify-between">
-          <h2 className="text-base m:text-lg lg:text-xl">
-            <span className="font-medium">Volunteer's </span>Information
-          </h2>
+          <h2 className="text-base m:text-lg lg:text-xl">{t.volunteerInfo}</h2>
           {isOwner && (
             <div
               className="flex gap-1 items-center cursor-pointer transition-transform hover:scale-110 hover:transition-transform duration-300 hover:duration-300"
               onClick={() => handleEditClick("personalInfo")}
             >
               <img src={EditSvg.src} alt="Edit" className="w-5 h-5" />
-              <p className="text-sm m:text-base lg:text-lg">Edit</p>
+              <p className="text-sm m:text-base lg:text-lg">{t.edit}</p>
             </div>
           )}
         </div>
@@ -266,7 +268,7 @@ const EditUserPage = ({
       {/* Contact Info */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white ">
         <div className="flex justify-between">
-          <h2 className="text-base m:text-lg lg:text-xl">Contact Info</h2>
+          <h2 className="text-base m:text-lg lg:text-xl">{t.contactInfo}</h2>
           {profileData?.name !== currentUser?.name && currentUser ? (
             <Link
               href="/chat"
@@ -300,7 +302,7 @@ const EditUserPage = ({
                   ></path>
                 </g>
               </svg>
-              <p className="text-lg">Message</p>
+              <p className="text-lg">{t.message}</p>
             </Link>
           ) : null}
           {isOwner && (
@@ -309,22 +311,22 @@ const EditUserPage = ({
               onClick={() => handleEditClick("contactInfo")}
             >
               <img src={EditSvg.src} alt="Edit" className="w-5 h-5" />
-              <p className="text-sm m:text-base lg:text-lg">Edit</p>
+              <p className="text-sm m:text-base lg:text-lg">{t.edit}</p>
             </div>
           )}
         </div>
         <div className="divider m-0"></div>
         <div className="flex flex-col gap-6">
           <p className="flex gap-4 text-sm lg:text-lg">
-            <span className="text-gray-400 w-48">Email</span>
+            <span className="text-gray-400 w-48">{t.email}</span>
             <span>{profileData.email}</span>
           </p>
           <p className="flex gap-4 text-sm lg:text-lg">
-            <span className="text-gray-400 w-48">Phone Number</span>
+            <span className="text-gray-400 w-48">{t.phoneNumber}</span>
             <span>{profileData.phone}</span>
           </p>
           <p className="flex gap-4 text-sm lg:text-lg">
-            <span className="text-gray-400 w-48">Location</span>
+            <span className="text-gray-400 w-48">{t.location}</span>
             <span>{profileData.location}</span>
           </p>
         </div>
@@ -332,24 +334,24 @@ const EditUserPage = ({
       {/* Achievements */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white ">
         <div className="flex justify-between">
-          <h2 className="text-base m:text-lg lg:text-xl">Achievements</h2>
+          <h2 className="text-base m:text-lg lg:text-xl">{t.achievements}</h2>
         </div>
         <div className="divider m-0"></div>
         <div className="flex flex-col gap-6">
           <p className="flex gap-4 text-sm lg:text-lg">
-            <span className="w-64">Rating</span>
+            <span className="w-64">{t.rating}</span>
             <span className="text-yellow-500 font-medium">
               {profileData.rating}
             </span>
           </p>
           <p className="flex gap-4 text-sm lg:text-lg">
-            <span className="w-64">Hours Volunteered</span>
+            <span className="w-64">{t.hoursVolunteered}</span>
             <span className="text-green-600 font-medium">
               {profileData.hoursVolunteered}
             </span>
           </p>
           <p className="flex gap-4 text-sm lg:text-lg">
-            <span className="w-64">Completed Projects Count</span>
+            <span className="w-64">{t.completedEventsCount}</span>
             <span className="text-violet-400 font-medium">
               {profileData.completedProjects?.length}
             </span>
@@ -360,7 +362,9 @@ const EditUserPage = ({
       {/* Completed Projects */}
       <div className="flex flex-col lg:gap-3 shadow p-7 rounded-md bg-white mt-6">
         <div className="flex justify-between">
-          <h2 className="text-base m:text-lg lg:text-xl">Completed Projects</h2>
+          <h2 className="text-base m:text-lg lg:text-xl">
+            {t.completedEvents}
+          </h2>
         </div>
         <div className="divider m-0"></div>
         <div className="relative">
@@ -373,7 +377,6 @@ const EditUserPage = ({
                     key={index}
                     className="carousel-item p-4 rounded-3xl border-2  border-gray-300 flex flex-col items-center h-96 w-72 hover:border-gray-500 duration-200 cursor-pointer"
                   >
-                    {/* Изображение проекта */}
                     <img
                       src={getImageUrl(project.images[0])}
                       alt={project?.title || "Project Image"}
@@ -390,12 +393,12 @@ const EditUserPage = ({
                     </p>
                     {/* Локация */}
                     <p className="text-sm text-gray-500 mt-2">
-                      <span className="font-semibold">Location:</span>{" "}
+                      <span className="font-semibold">{t.locationLabel}</span>{" "}
                       {project?.location || "N/A"}
                     </p>
                     {/* Даты проекта */}
                     <p className="text-sm text-gray-500 mt-1">
-                      <span className="font-semibold">Start Date:</span>{" "}
+                      <span className="font-semibold">{t.startDate}</span>{" "}
                       {new Date(project?.startDate)
                         .toLocaleString("ru-RU", {
                           day: "2-digit",
@@ -407,7 +410,7 @@ const EditUserPage = ({
                         .replace(",", " |")}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      <span className="font-semibold">End Date:</span>{" "}
+                      <span className="font-semibold">{t.endDate}</span>{" "}
                       {new Date(project?.endDate)
                         .toLocaleString("ru-RU", {
                           day: "2-digit",
@@ -421,7 +424,7 @@ const EditUserPage = ({
 
                     {/* Часы */}
                     <p className="text-sm text-gray-500 mt-2">
-                      <span className="font-semibold">Hours:</span>{" "}
+                      <span className="font-semibold">{t.hours}</span>{" "}
                       {project?.hours || 0}
                     </p>
                   </Link>
@@ -430,7 +433,7 @@ const EditUserPage = ({
             </>
           ) : (
             <p className="text-gray-500 text-center text-lg">
-              No completed projects yet.
+              {t.noCompletedEvents}
             </p>
           )}
         </div>
@@ -449,7 +452,7 @@ const EditUserPage = ({
           className="btn btn-error ml-auto  text-white "
           onClick={deleteUser}
         >
-          Delete Account
+          {t.deleteAccount}
         </button>
       )}
 
@@ -464,7 +467,7 @@ const EditUserPage = ({
         />
       )}
 
-      {loading && <p>Updating profile...</p>}
+      {loading && <p>{t.updatingProfile}</p>}
     </div>
   );
 };

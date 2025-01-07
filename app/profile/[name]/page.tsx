@@ -5,7 +5,6 @@ import { api } from "@/hooks/api";
 import userBg from "@/assets/user__background.jpg";
 import { useEffect, useState } from "react";
 
-// Функция для получения данных пользователя по имени
 const fetchUserDataName = async (name: string) => {
   const response = await fetch(`${api}/auth/users/${name}`, {
     method: "GET",
@@ -19,7 +18,6 @@ const fetchUserDataName = async (name: string) => {
   return response.json();
 };
 
-// Функция для получения текущих данных пользователя по токену
 const fetchUserData = async (token: string) => {
   const response = await fetch(`${api}/auth/profiles/me`, {
     method: "GET",

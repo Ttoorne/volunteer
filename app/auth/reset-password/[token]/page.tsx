@@ -2,10 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import { api } from "@/hooks/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { resetPassword__translation } from "@/components/AuthPage/Translation";
 
 const ResetPasswordPage = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = resetPassword__translation[language];
+
   const router = useRouter();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,13 +32,13 @@ const ResetPasswordPage = () => {
 
   const handleResetPassword = async () => {
     if (!newPassword || !confirmPassword) {
-      setMessage("Both password fields are required.");
+      setMessage(t.bothPasswordFieldsRequired);
       setMessageType("warning");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage("Passwords do not match.");
+      setMessage(t.passwordsDoNotMatch);
       setMessageType("error");
       return;
     }
@@ -51,15 +56,15 @@ const ResetPasswordPage = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage("Password reset successfully.");
+        setMessage(t.passwordResetSuccess);
         setMessageType("success");
         setTimeout(() => router.push("/auth/login"), 2000);
       } else {
-        setMessage(data.error || "Error occurred.");
+        setMessage(data.error || t.errorOccurred);
         setMessageType("error");
       }
     } catch (error) {
-      setMessage("Failed to connect to the server.");
+      setMessage(t.failedToConnect);
       setMessageType("error");
     } finally {
       setIsLoading(false);
@@ -91,7 +96,7 @@ const ResetPasswordPage = () => {
         </button>
 
         <h1 className="text-xl sm:text-2xl text-center font-bold mb-4">
-          Reset Your Password
+          {t.resetYourPassword}
         </h1>
 
         {message && messageType && (
@@ -126,7 +131,7 @@ const ResetPasswordPage = () => {
                 id="newPassword"
                 className="grow py-2 px-3 outline-none"
                 type="password"
-                placeholder="Enter new password"
+                placeholder={t.enterNewPassword}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -151,7 +156,7 @@ const ResetPasswordPage = () => {
                 id="confirmPassword"
                 className="grow py-2 px-3 outline-none"
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t.confirmNewPassword}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -166,7 +171,7 @@ const ResetPasswordPage = () => {
             } btn btn-block btn-outline`}
             disabled={isLoading}
           >
-            {isLoading ? "Processing..." : "Reset Password"}
+            {isLoading ? t.processing : t.resetPassword}
           </button>
         </form>
       </div>

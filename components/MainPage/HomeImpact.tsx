@@ -13,7 +13,17 @@ interface Project {
   status: "open" | "completed" | "in-progress";
 }
 
-const HomeImpact = () => {
+interface HomeImpactProps {
+  translationsImpactOverview: {
+    impactOverviewTitle: string;
+    volunteersIn2024: (volunteersCount: number) => string;
+    completedProjects: (completedProjectsCount: number) => string;
+    volunteersIn2024Title: (volunteersCount: number) => string;
+    completedProjectsTitle: (completedProjectsCount: number) => string;
+  };
+}
+
+const HomeImpact = ({ translationsImpactOverview }: HomeImpactProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,6 +75,8 @@ const HomeImpact = () => {
     (project) => project.status === "completed"
   ).length;
 
+  const volunteersCount = users.length;
+
   if (loading) {
     return (
       <div className="loading loading-spinner loading-lg text-primary mx-auto"></div>
@@ -74,7 +86,7 @@ const HomeImpact = () => {
   if (error) {
     return (
       <div className="text-center text-red-500">
-        <p>Error: {error}</p>
+        <p>Error X|</p>
       </div>
     );
   }
@@ -82,22 +94,20 @@ const HomeImpact = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-6 rounded-lg shadow-lg transform hover:scale-105 transition duration-300 ease-in-out relative">
-        <h3 className="font-medium text-2xl text-white mb-3">{`${users?.length} Volunteers in 2024`}</h3>
+        <h3 className="font-medium text-2xl text-white mb-3">
+          {translationsImpactOverview.volunteersIn2024Title(volunteersCount)}
+        </h3>
         <p className="text-gray-100 text-base">
-          {`This year, we reached ${users?.length} volunteers contributing to various
-        causes. Let's keep it up!`}
+          {translationsImpactOverview.volunteersIn2024(volunteersCount)}
         </p>
-        <div className="absolute top-5 right-16 w-24 h-24 bg-yellow-300 rounded-full opacity-40 transform translate-x-12 -translate-y-6 md:w-20 md:h-20 sm:w-16 sm:h-16 sm:right-5 sm:top-4"></div>
-        <div className="absolute bottom-0 left-0 w-20 h-20 bg-teal-200 rotate-45 rounded-md opacity-30 md:w-16 md:h-16 sm:w-12 sm:h-12 sm:left-4 sm:bottom-4"></div>
       </div>
       <div className="bg-gradient-to-r from-green-400 to-teal-500 p-6 rounded-lg shadow-lg transform hover:scale-105 transition duration-300 ease-in-out relative">
-        <h3 className="font-medium text-2xl text-white mb-3">{`${completedProjects} Completed Projects`}</h3>
+        <h3 className="font-medium text-2xl text-white mb-3">
+          {translationsImpactOverview.completedProjectsTitle(completedProjects)}
+        </h3>
         <p className="text-gray-100 text-base">
-          We have successfully completed {completedProjects} projects so far.
-          Together, we are making a difference!
+          {translationsImpactOverview.completedProjects(completedProjects)}
         </p>
-        <div className="absolute top-0 right-0 w-24 h-24 bg-pink-300 rounded-full opacity-40 transform -translate-x-12 translate-y-6 md:w-20 md:h-20 sm:w-16 sm:h-16 sm:right-5 sm:top-4"></div>
-        <div className="absolute bottom-0 right-0 w-20 h-20 bg-yellow-200 opacity-30 rotate-45 rounded-md md:w-16 md:h-16 sm:w-12 sm:h-12 sm:right-4 sm:bottom-4"></div>
       </div>
     </div>
   );

@@ -6,8 +6,11 @@ import ChatComponent from "@/components/ChatsPage/ChatComponent";
 import background from "@/assets/chat_page__bg.png";
 import Link from "next/link";
 import { fetchUserAvatar } from "@/server/utils/fetchUserAvatar";
+import { useLanguage } from "@/context/LanguageContext";
+import { chatPage__translations } from "@/components/ChatsPage/Translations";
 
 const ChatPage: React.FC = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [socket, setSocket] = useState<any>(null);
@@ -18,6 +21,8 @@ const ChatPage: React.FC = () => {
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
   const [avatarUrl, setAvatarUrl] = useState("");
   const [refresh, setRefresh] = useState<boolean>(false);
+
+  const t = chatPage__translations[language];
 
   useEffect(() => {
     const fetchAvatar = async () => {
@@ -66,12 +71,12 @@ const ChatPage: React.FC = () => {
         credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to fetch token");
+      if (!response.ok) throw new Error(t.failedToFetchToken);
 
       const data = await response.json();
       setToken(data.token);
     } catch (error) {
-      console.error("Error fetching token:", error);
+      console.error(t.errorFetchingToken, error);
     }
   };
 
@@ -91,7 +96,7 @@ const ChatPage: React.FC = () => {
           const data = await response.json();
           setUserId(data._id);
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error(t.errorFetchingUserData, error);
         }
       }
     };
@@ -106,7 +111,7 @@ const ChatPage: React.FC = () => {
       });
 
       socketConnection.on("connect", () => {
-        console.log("Socket connected");
+        console.log(t.socketConnected);
       });
 
       setSocket(socketConnection);
@@ -117,7 +122,6 @@ const ChatPage: React.FC = () => {
     }
   }, [userId, token]);
 
-  // Внутри компонента ChatPage
   useEffect(() => {
     const fetchChatsAndUsers = async () => {
       if (token) {
@@ -128,7 +132,6 @@ const ChatPage: React.FC = () => {
           });
           const chatsData = await chatsResponse.json();
 
-          // Сортировка чатов по дате последнего сообщения
           const sortedChats = chatsData.data.sort((a: any, b: any) => {
             const lastMessageA = a.messages?.[a.messages.length - 1] || null;
             const lastMessageB = b.messages?.[b.messages.length - 1] || null;
@@ -152,11 +155,9 @@ const ChatPage: React.FC = () => {
           const usersData = await usersResponse.json();
           setUsers(usersData);
 
-          // Проверка на наличие chatWithOrganizer в localStorage
           const chatWithOrganizer = localStorage.getItem("chatWithOrganizer");
           if (chatWithOrganizer) {
             const organizer = JSON.parse(chatWithOrganizer);
-            // Найдем чат с этим организатором
             const existingChat = sortedChats.find((chat: any) =>
               chat.participants.some(
                 (participant: any) => participant?._id === organizer._id
@@ -171,7 +172,7 @@ const ChatPage: React.FC = () => {
             localStorage.removeItem("chatWithOrganizer");
           }
         } catch (error) {
-          console.error("Error fetching chats or users:", error);
+          console.error(t.errorFetchingChatsOrUsers, error);
         }
       }
     };
@@ -216,10 +217,10 @@ const ChatPage: React.FC = () => {
         setChats((prevChats) => [newChat.data, ...prevChats]);
         openChat(newChat.data);
       } else {
-        console.error("Failed to create chat");
+        console.error(t.failedToCreateChat);
       }
     } catch (error) {
-      console.error("Error creating chat:", error);
+      console.error(t.errorCreatingChat, error);
     }
   };
 
@@ -260,7 +261,7 @@ const ChatPage: React.FC = () => {
       {/* Левая панель: список чатов */}
       <div className="w-1/3 bg-gray-50 sticky mt-[5vh] rounded-3xl top-[5vh] left-5 h-[90vh] shadow-lg">
         <h2 className="h-16 text-xl font-medium text-white bg-teal-600 p-5 rounded-t-3xl flex items-center justify-center gap-2">
-          <span>Chats</span>
+          <span>{t.chats}</span>
           {chats.reduce((total, chat) => total + getUnreadUserCount(chat), 0) >
             0 && (
             <span className="bg-gray-50 text-gray-500 text-sm font-bold py-1 px-3 rounded-full">
@@ -341,7 +342,7 @@ const ChatPage: React.FC = () => {
                           </span>
                         </>
                       ) : (
-                        "No messages yet"
+                        t.noMessagesYet
                       )}
                     </div>
                   </div>
@@ -393,7 +394,7 @@ const ChatPage: React.FC = () => {
           </div>
         ) : (
           <p className="text-white text-2xl text-center mt-8">
-            Choose chat from the list
+            {t.chooseChatFromList}
           </p>
         )}
       </div>

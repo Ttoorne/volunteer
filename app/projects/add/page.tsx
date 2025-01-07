@@ -5,8 +5,18 @@ import thinkerImg from "@/assets/add_page__thinker.gif";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Alert from "@/components/Alert";
+import Alert from "@/components/MainComponents/Alert";
 import { api } from "@/hooks/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { addPage__translations } from "@/components/ProjectsPage/Translation";
+import { registerLocale } from "react-datepicker";
+import { enGB } from "date-fns/locale/en-GB";
+import { tr } from "date-fns/locale/tr";
+import { ru } from "date-fns/locale/ru";
+
+registerLocale("en", enGB);
+registerLocale("tr", tr);
+registerLocale("ru", ru);
 
 type ProjectData = {
   title: string;
@@ -19,6 +29,8 @@ type ProjectData = {
 };
 
 const AddProjectPage = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = addPage__translations[language];
   const [projectData, setProjectData] = useState<ProjectData>({
     title: "",
     description: "",
@@ -44,7 +56,7 @@ const AddProjectPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch token");
+        throw new Error(t.failedToFetchToken);
       }
 
       const data = await response.json();
@@ -68,7 +80,7 @@ const AddProjectPage = () => {
             organizer: userData?._id || "",
           }));
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error(t.errorFetchingUserData, error);
         }
       }
     };
@@ -96,7 +108,7 @@ const AddProjectPage = () => {
     if (validFiles.length > 6) {
       setAlertData({
         type: "warning",
-        message: "You can upload up to 6 images only.",
+        message: t.maxImagesLimit,
       });
       return;
     }
@@ -136,7 +148,7 @@ const AddProjectPage = () => {
       correctedDate.setMinutes(correctedDate.getMinutes() + 30);
       setAlertData({
         type: "info",
-        message: "End date adjusted to 30 minutes after start date.",
+        message: t.endDateAdjusted,
       });
       setProjectData((prevData) => ({
         ...prevData,
@@ -177,7 +189,7 @@ const AddProjectPage = () => {
         return;
       }
 
-      setAlertData({ type: "success", message: "Project successfully added!" });
+      setAlertData({ type: "success", message: t.projectAdded });
       setProjectData({
         title: "",
         description: "",
@@ -191,7 +203,7 @@ const AddProjectPage = () => {
     } catch (error) {
       setAlertData({
         type: "error",
-        message: "An unexpected error occurred. Please try again later.",
+        message: t.unexpectedError,
       });
       setLoading(false);
     }
@@ -213,7 +225,7 @@ const AddProjectPage = () => {
       />
       <div className="w-3/4 lg:w-2/4 shadow-2xl rounded-3xl p-7 bg-white">
         <h1 className="text-2xl font-semibold mb-4 text-center text-gray-500">
-          Add New Project
+          {t.addNewProject}
         </h1>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -221,7 +233,7 @@ const AddProjectPage = () => {
               htmlFor="title"
               className="input input-bordered flex items-center gap-2 bg-white border-2 border-gray-400 text-gray-500 rounded-2xl"
             >
-              Title
+              {t.title}
               <input
                 type="text"
                 id="title"
@@ -239,7 +251,7 @@ const AddProjectPage = () => {
                     : "md:badge-warning"
                 } p-4 hidden md:badge`}
               >
-                {projectData.title ? "Valid" : "Required"}
+                {projectData.title ? t.valid : t.required}
               </span>
             </label>
           </div>
@@ -249,7 +261,7 @@ const AddProjectPage = () => {
               htmlFor="description"
               className="block text-sm font-medium text-gray-500 ml-3"
             >
-              Description
+              {t.description}
             </label>
             <label className="form-control">
               <textarea
@@ -261,11 +273,12 @@ const AddProjectPage = () => {
                 rows={4}
                 required
                 maxLength={500}
-                placeholder="Type description for a project"
+                placeholder={t.typeDescription}
               ></textarea>
               <div className="text-sm text-gray-500 w-full mt-1 text-right">
                 <span>
-                  {(projectData.description ?? "").length}/500 characters
+                  {(projectData.description ?? "").length}
+                  {t.charactersLimit}
                 </span>
               </div>
               <div className="label">
@@ -276,7 +289,7 @@ const AddProjectPage = () => {
                       : "md:badge-warning"
                   } p-4 hidden md:badge`}
                 >
-                  {projectData.description ? "Valid" : "Required"}
+                  {projectData.description ? t.valid : t.required}
                 </span>
               </div>
             </label>
@@ -287,15 +300,15 @@ const AddProjectPage = () => {
               htmlFor="startDate"
               className="flex gap-4 items-center text-sm font-medium text-gray-500 mb-2"
             >
-              <span>Start Date and Time</span>
+              <span>{t.startDateAndTime}</span>
               <span
                 className={`${
                   projectData.startDate
                     ? "md:badge-success md:text-white"
                     : "md:badge-warning"
-                } py-3 px-4 hidden md:badge`}
+                } p-4  hidden md:badge font-normal`}
               >
-                {projectData.startDate ? "Valid" : "Required"}
+                {projectData.startDate ? t.valid : t.required}
               </span>
             </label>
             <div className="flex items-center gap-2">
@@ -310,6 +323,7 @@ const AddProjectPage = () => {
                 timeIntervals={15}
                 required
                 onChange={handleStartDateChange}
+                locale={language}
                 filterTime={(time) => {
                   const hour = time.getHours();
                   return hour >= 7 && hour < 21;
@@ -353,9 +367,7 @@ const AddProjectPage = () => {
                 </g>
               </svg>
             </div>
-            <small className="text-gray-400 ml-1">
-              Select a date and time in 24-hour format.
-            </small>
+            <small className="text-gray-400 ml-1">{t.selectDateAndTime}</small>
           </div>
 
           <div className="mb-6">
@@ -363,7 +375,7 @@ const AddProjectPage = () => {
               htmlFor="endDate"
               className="flex gap-4 items-center text-sm font-medium text-gray-500 mb-2"
             >
-              <span>End Date and Time</span>
+              <span>{t.endDateAndTime}</span>
               <span
                 className={`${
                   projectData.endDate &&
@@ -371,12 +383,12 @@ const AddProjectPage = () => {
                     new Date(projectData.startDate)
                     ? "md:badge-success md:text-white"
                     : "md:badge-warning"
-                } py-3 px-4 hidden md:badge`}
+                } p-4 hidden md:badge font-normal`}
               >
                 {projectData.endDate &&
                 new Date(projectData.endDate) > new Date(projectData.startDate)
-                  ? "Valid"
-                  : "Required"}
+                  ? t.valid
+                  : t.required}
               </span>
             </label>
             <div className="flex items-center gap-2">
@@ -400,6 +412,7 @@ const AddProjectPage = () => {
                   const hour = time.getHours();
                   return hour >= 7 && hour <= 22;
                 }}
+                locale={language}
                 className="input input-bordered bg-white border-2 border-gray-400 text-gray-500 rounded-2xl flex-grow  disabled:bg-white disabled:border-gray-400"
               />
               <svg
@@ -439,9 +452,7 @@ const AddProjectPage = () => {
                 </g>
               </svg>
             </div>
-            <small className="text-gray-400 ml-1">
-              Select a date and time in 24-hour format.
-            </small>
+            <small className="text-gray-400 ml-1">{t.selectDateAndTime}</small>
           </div>
 
           <div className="mb-6">
@@ -449,7 +460,7 @@ const AddProjectPage = () => {
               htmlFor="location"
               className="input input-bordered flex items-center gap-2 bg-white border-2 border-gray-400 text-gray-500 rounded-2xl"
             >
-              Location
+              {t.location}
               <input
                 type="text"
                 id="location"
@@ -467,7 +478,7 @@ const AddProjectPage = () => {
                     : "md:badge-warning"
                 } p-4 hidden md:badge`}
               >
-                {projectData.location ? "Valid" : "Required"}
+                {projectData.location ? t.valid : t.required}
               </span>
             </label>
           </div>
@@ -477,7 +488,7 @@ const AddProjectPage = () => {
               htmlFor="images"
               className="block text-sm font-medium text-gray-500 mb-1"
             >
-              Upload Images (Max: 6)
+              {t.uploadImages}
             </label>
             <input
               type="file"
@@ -491,7 +502,7 @@ const AddProjectPage = () => {
             />
             {projectData.images.length > 0 && (
               <div className="mt-3">
-                <h4 className="text-sma font-medium">Selected Images:</h4>
+                <h4 className="text-sma font-medium">{t.selectedImages}</h4>
                 <ul className="list-disc pl-5 text-sm lg:text-base flex flex-col gap-1">
                   {projectData.images.map((file, index) => (
                     <li className="" key={index}>
@@ -511,7 +522,7 @@ const AddProjectPage = () => {
             {loading ? (
               <span className="loading loading-spinner md:loading-md lg:loading-lg"></span>
             ) : (
-              <span>Submit</span>
+              <span>{t.submit}</span>
             )}
           </button>
         </form>

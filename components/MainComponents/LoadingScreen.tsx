@@ -1,8 +1,10 @@
 "use client";
-
+import { useLanguage } from "@/context/LanguageContext";
 import { useState, useEffect } from "react";
+import { loadingScreen__translations } from "./Translation";
 
 const LoadingScreen = () => {
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -11,6 +13,8 @@ const LoadingScreen = () => {
   }, []);
 
   if (!isLoading) return null;
+
+  const t = loadingScreen__translations[language];
 
   return (
     <div
@@ -36,11 +40,20 @@ const LoadingScreen = () => {
         {/* Надпись */}
         <div className="relative flex flex-col gap-5 text-white p-6 md:p-12 rounded-lg shadow-2xl z-50 bg-gray-800 bg-opacity-30 w-full max-w-3xl">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-snug text-center animate-fade-in">
-            Welcome to
-            <span className="font-extrabold"> Volunteer</span>!
+            {language === "tr" && (
+              <span>
+                <span className="font-extrabold">Volunteer</span>
+                <span>'a</span>
+              </span>
+            )}
+            {t.welcome}
+            {language !== "tr" && (
+              <span className="font-extrabold">Volunteer</span>
+            )}
+            !
           </h2>
           <p className="text-lg md:text-xl lg:text-2xl text-center animate-fade-in">
-            Let's make a positive impact together.
+            {t.positiveImpact}
           </p>
         </div>
       </div>
