@@ -39,9 +39,7 @@ const Navbar: React.FC = () => {
 
       const data = await response.json();
       setToken(data.token);
-    } catch (error) {
-      console.error("Error:", error);
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -61,7 +59,6 @@ const Navbar: React.FC = () => {
             handleAvatarLoad();
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
         } finally {
           setIsLoading(false);
         }

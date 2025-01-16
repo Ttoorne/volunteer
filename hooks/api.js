@@ -1,1 +1,2 @@
-export const api = "http://localhost:5000/api";
+const port = process.env.NEXT_PUBLIC_API_PORT;
+export const api = `http://localhost:${port}/api`;

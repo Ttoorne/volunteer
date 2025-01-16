@@ -12,12 +12,11 @@ const projectRoutes = require("./routes/projects");
 const messageRoutes = require("./routes/messages");
 const chatRoutes = require("./routes/chats");
 
-const Message = require("./models/Message"); // Импорт модели Message
-const Chat = require("./models/Chat"); // Импорт модели Chat
+const Message = require("./models/Message");
+const Chat = require("./models/Chat");
 
 const app = express();
 
-// Создаем HTTP-сервер для интеграции с Socket.IO
 const server = http.createServer(app);
 
 // Настройка CORS
@@ -124,7 +123,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const port = process.env.PORT || 3500;
+const port = process.env.PORT || process.env.NEXT_PUBLIC_API_PORT;
 
 // Подключение Express и WebSocket
 server

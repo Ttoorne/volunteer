@@ -23,6 +23,7 @@ const ChatPage: React.FC = () => {
   const [refresh, setRefresh] = useState<boolean>(false);
 
   const t = chatPage__translations[language];
+  const port = process.env.NEXT_PUBLIC_API_PORT;
 
   useEffect(() => {
     const fetchAvatar = async () => {
@@ -106,7 +107,7 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     if (userId && token) {
-      const socketConnection = io("http://localhost:5000", {
+      const socketConnection = io(`http://localhost:${port}`, {
         auth: { token },
       });
 

@@ -62,8 +62,10 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     [token]
   );
 
+  const port = process.env.NEXT_PUBLIC_API_PORT;
+
   useEffect(() => {
-    socket.current = io("http://localhost:5000", {
+    socket.current = io(`http://localhost:${port}`, {
       transports: ["websocket"],
       auth: {
         token: token,
