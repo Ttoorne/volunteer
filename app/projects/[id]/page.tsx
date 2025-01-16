@@ -152,7 +152,7 @@ const ProjectPage = () => {
       if (!project?.participants) return;
 
       const avatarPromises = project.participants.map(async (participant) => {
-        const avatarId = participant.user.avatar;
+        const avatarId = participant.user?.avatar;
         const imageUrl = await loadAvatar(avatarId);
         return { avatarId, imageUrl };
       });
@@ -439,28 +439,28 @@ const ProjectPage = () => {
               {t.participants}({`${project?.participants.length}`})
             </h3>
             <div className="carousel rounded-box flex flex-wrap gap-4">
-              {project?.participants.map((participant) => (
+              {project?.participants.map((participant, index) => (
                 <Link
-                  href={`/profile/${participant.user.name}`}
-                  key={participant.user._id}
+                  href={`/profile/${participant.user?.name}`}
+                  key={participant.user?._id + index}
                   className="carousel-item flex flex-col items-center bg-white rounded-lg border border-gray-200 shadow-md p-4 w-48 hover:shadow-xl transition-shadow "
                 >
                   <div className="w-20 h-20 mb-4">
                     <img
                       src={
-                        avatarUrls[participant.user.avatar] ||
+                        avatarUrls[participant.user?.avatar] ||
                         "https://cdn-icons-png.flaticon.com/512/3607/3607444.png"
                       }
-                      alt={participant.user.name}
+                      alt={participant.user?.name}
                       className="w-full h-full rounded-full object-cover"
                     />
                   </div>
                   <div className="text-center">
                     <p className="font-semibold text-gray-900">
-                      {participant.user.name}
+                      {participant.user?.name}
                     </p>
                     <p className="text-gray-600 text-sm">
-                      {participant.user.firstName} {participant.user.lastName}
+                      {participant.user?.firstName} {participant.user?.lastName}
                     </p>
                   </div>
                 </Link>

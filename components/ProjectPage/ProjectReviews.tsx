@@ -129,7 +129,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
   useEffect(() => {
     if (currentUser) {
       const userHasReviewed = reviews.some(
-        (review) => review.user._id === currentUser._id
+        (review) => review.user?._id === currentUser._id
       );
       setHasReviewed(userHasReviewed);
     }
@@ -395,22 +395,22 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
             >
               <div className="review-header flex items-center space-x-4 flex-col sm:flex-row">
                 <Link
-                  href={`/profile/${review.user.name}`}
+                  href={`/profile/${review.user?.name}`}
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full duration-200 hover:scale-95"
                 >
                   <img
                     src={
-                      avatarUrls[review.user.avatar] ||
+                      avatarUrls[review.user?.avatar] ||
                       "https://cdn-icons-png.flaticon.com/512/3607/3607444.png"
                     }
-                    alt={review.user.name}
+                    alt={review.user?.name}
                     className="cursor-pointer avatar w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-md"
                   />
                 </Link>
                 <div className="text-sm space-y-2 text-center sm:text-left">
-                  <Link href={`/profile/${review.user.name}`}>
+                  <Link href={`/profile/${review.user?.name}`}>
                     <h4 className="font-bold text-gray-800 text-base">
-                      @{review.user.name}
+                      {review.user ? `@${review.user.name}` : t.uknownUserName}
                     </h4>
                   </Link>
                   <div className="flex items-center justify-center sm:justify-start space-x-1">
@@ -448,7 +448,7 @@ const ProjectReviews: React.FC<ProjectReviewsProps> = ({
               <span className="text-gray-500 text-sm md:text-base block text-right">
                 {formatReviewDate(review.createdAt.toString(), language)}
               </span>
-              {currentUser?._id === review.user._id && (
+              {currentUser?._id === review.user?._id && (
                 <div className="review-actions flex flex-wrap space-x-4 mt-4 justify-center sm:justify-end">
                   <button
                     onClick={() => {

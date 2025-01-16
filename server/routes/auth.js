@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Project = require("../models/Project");
+const Chat = require("../models/Chat");
+const Message = require("../models/Message");
 const PendingUser = require("../models/PendingUser");
 const sendEmail = require("../utils/sendEmail");
 const sendPasswordResetEmail = require("../utils/sendPasswordResetEmail");
@@ -874,10 +876,23 @@ router.delete("/users/delete/:id", async (req, res) => {
       }
     }
 
+    // Находим и удаляем все чаты, в которых состоит этот пользователь
+    const chats = await Chat.find({ participants: id });
+
+    // Удаляем сообщения из этих чатов
+    await Message.deleteMany({
+      chatId: { $in: chats.map((chat) => chat._id) },
+    });
+
+    // Удаляем чаты
+    await Chat.deleteMany({ participants: id });
+
     // Удаляем пользователя
     await User.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "User deleted successfully." });
+    res
+      .status(200)
+      .json({ message: "User and associated chats deleted successfully." });
   } catch (error) {
     console.error("Error during user deletion:", error);
     res

@@ -485,7 +485,6 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Удаление изображений, связанных с проектом
     if (project.images && project.images.length > 0) {
       await ProjectImage.deleteMany({ _id: { $in: project.images } });
     }

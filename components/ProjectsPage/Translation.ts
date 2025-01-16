@@ -297,6 +297,7 @@ export const projectReviews__translations = {
     submit: "Submit",
     editYourReview: "Edit Your Review",
     writeYourCommentHere: "Write your comment here...",
+    uknownUserName: "Unknown User",
   },
   ru: {
     failedToFetchReviews: "Не удалось получить отзывы.",
@@ -337,6 +338,7 @@ export const projectReviews__translations = {
     submit: "Отправить",
     editYourReview: "Отредактировать отзыв",
     writeYourCommentHere: "Напишите ваш комментарий здесь...",
+    uknownUserName: "Неизвестный пользователь",
   },
   tr: {
     failedToFetchReviews: "Yorumlar alınamadı.",
@@ -374,5 +376,6 @@ export const projectReviews__translations = {
     submit: "Gönder",
     editYourReview: "Yorumunuzu Düzenleyin",
     writeYourCommentHere: "Yorumunuzu buraya yazın...",
+    uknownUserName: "Bilinmeyen Kullanıcı",
   },
 };

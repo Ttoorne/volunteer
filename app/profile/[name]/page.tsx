@@ -4,6 +4,8 @@ import EditUserPage from "@/components/UserPage/EditUserPage";
 import { api } from "@/hooks/api";
 import userBg from "@/assets/user__background.jpg";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+import { userPage__translation } from "@/components/UserPage/Translation";
 
 const fetchUserDataName = async (name: string) => {
   const response = await fetch(`${api}/auth/users/${name}`, {
@@ -70,6 +72,8 @@ const ProfilePage = ({ params }: { params: { name: string } }) => {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState<boolean>(false);
+  const { language }: { language: "en" | "tr" | "ru" } = useLanguage();
+  const t = userPage__translation[language];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,8 +115,6 @@ const ProfilePage = ({ params }: { params: { name: string } }) => {
     fetchData();
   }, [params.name, refresh]);
 
-  console.log(userData);
-
   if (loading) {
     return (
       <div
@@ -126,6 +128,33 @@ const ProfilePage = ({ params }: { params: { name: string } }) => {
         }}
       >
         <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  if (params.name === "undefined") {
+    return (
+      <div
+        className="flex items-center justify-center min-h-screen bg-gray-100 text-center"
+        style={{
+          backgroundImage: `url(${userBg.src})`,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="bg-white p-16 rounded-xl">
+          <h1 className="text-4xl font-bold text-red-400 mb-4">
+            {t.userNotFound}
+          </h1>
+          <p className="text-gray-600">{t.userNotFoundMessage}</p>
+          <button
+            onClick={() => window.history.back()}
+            className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
+          >
+            {t.goBack}
+          </button>
+        </div>
       </div>
     );
   }

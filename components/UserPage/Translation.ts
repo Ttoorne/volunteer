@@ -70,6 +70,10 @@ export const userPage__translation = {
     noReviewsYet: "No Reviews Yet",
     confirm: "Confirm",
     cancel: "Cancel",
+    userNotFound: "User Not Found",
+    userNotFoundMessage:
+      "The user you are looking for does not exist or may have been removed.",
+    goBack: "Go Back",
   },
   ru: {
     httpError: "Ошибка HTTP! Статус:",
@@ -143,6 +147,10 @@ export const userPage__translation = {
     noReviewsYet: "Пока нет отзывов",
     confirm: "Подтвердить",
     cancel: "Отмена",
+    userNotFound: "Пользователь не найден",
+    userNotFoundMessage:
+      "Пользователь, которого вы ищете, не существует или был удалён.",
+    goBack: "Назад",
   },
   tr: {
     httpError: "HTTP hatası! Durum:",
@@ -215,5 +223,9 @@ export const userPage__translation = {
     noReviewsYet: "Henüz Yorum Yok",
     confirm: "Onayla",
     cancel: "İptal",
+    userNotFound: "Kullanıcı Bulunamadı",
+    userNotFoundMessage:
+      "Aradığınız kullanıcı mevcut değil veya silinmiş olabilir.",
+    goBack: "Geri Git",
   },
 };
