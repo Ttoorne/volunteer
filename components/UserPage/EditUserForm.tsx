@@ -179,7 +179,7 @@ const EditUserForm = ({
   };
 
   return (
-    <dialog className="modal modal-open mt-0">
+    <dialog className="modal modal-open mt-0 z-40">
       <div className="modal-box w-3/4 bg-white p-7">
         <form method="dialog">
           {/* Close button */}

@@ -65,7 +65,7 @@ router.get("/", async (req, res) => {
       return res.status(404).json({ error: "No chats found for this user." });
     }
 
-    res.json({ data: chats });
+    res.json({ data: chats || [] });
   } catch (error) {
     console.error("Error fetching chats:", error.message);
     res.status(500).json({ error: "An error occurred while fetching chats." });

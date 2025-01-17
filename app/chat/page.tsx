@@ -133,19 +133,23 @@ const ChatPage: React.FC = () => {
           });
           const chatsData = await chatsResponse.json();
 
-          const sortedChats = chatsData.data.sort((a: any, b: any) => {
-            const lastMessageA = a.messages?.[a.messages.length - 1] || null;
-            const lastMessageB = b.messages?.[b.messages.length - 1] || null;
+          const sortedChats = Array.isArray(chatsData.data)
+            ? chatsData.data.sort((a: any, b: any) => {
+                const lastMessageA =
+                  a.messages?.[a.messages.length - 1] || null;
+                const lastMessageB =
+                  b.messages?.[b.messages.length - 1] || null;
 
-            const dateA = lastMessageA
-              ? new Date(lastMessageA.createdAt)
-              : new Date(0);
-            const dateB = lastMessageB
-              ? new Date(lastMessageB.createdAt)
-              : new Date(0);
+                const dateA = lastMessageA
+                  ? new Date(lastMessageA.createdAt)
+                  : new Date(0);
+                const dateB = lastMessageB
+                  ? new Date(lastMessageB.createdAt)
+                  : new Date(0);
 
-            return dateB.getTime() - dateA.getTime();
-          });
+                return dateB.getTime() - dateA.getTime();
+              })
+            : [];
 
           setChats(sortedChats);
 

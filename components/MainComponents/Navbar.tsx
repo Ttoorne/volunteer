@@ -57,6 +57,11 @@ const Navbar: React.FC = () => {
             const avatarUrl = await fetchUserAvatarNavbar(userData.avatar);
             setUserAvatarUrl(avatarUrl);
             handleAvatarLoad();
+          } else {
+            setUserAvatarUrl(
+              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-DSW54utMSZ6J1F9luVr6YYDoRZ-FQYCL3w&s"
+            );
+            handleAvatarLoad();
           }
         } catch (error) {
         } finally {
@@ -101,9 +106,7 @@ const Navbar: React.FC = () => {
           });
 
           setChats(sortedChats);
-        } catch (error) {
-          console.error("Error fetching chats or users:", error);
-        }
+        } catch (error) {}
       }
     };
 
@@ -139,9 +142,11 @@ const Navbar: React.FC = () => {
 
   return (
     <nav
-      className={`relative z-40 py-4 border-b ${
+      className={`relative z-10 py-4 border-b ${
         pathname == "/chat"
-          ? "bg-teal-600 border-none"
+          ? "bg-teal-600 border-none z-40"
+          : pathname == "/projects"
+          ? "bg-white border-gray-100 z-40"
           : "bg-white border-gray-100"
       }   flex`}
     >
@@ -220,7 +225,7 @@ const Navbar: React.FC = () => {
             >
               <span>{t.messages}</span>
               {unreadCount !== 0 && pathname !== "/chat" ? (
-                <span className="bg-teal-600 rounded-full py-2 px-4 text-white text-base hover:bg-yellow-400 duration-300">
+                <span className="ml-2 bg-teal-600 rounded-full py-2 px-4 text-white text-base hover:bg-yellow-400 duration-300">
                   {t.new + unreadCount}
                 </span>
               ) : null}
