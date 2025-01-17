@@ -116,7 +116,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </p>
       </figure>
       <div className="card-body">
-        <h2 className="card-title flex gap-3 items-center text-lg lg:text-2xl pt-4">
+        <h2 className="card-title flex gap-3 truncate items-center text-lg lg:text-2xl pt-4">
           <span>
             {currentProject?.title.length > 100
               ? `${currentProject?.title.slice(0, 100)}...`
@@ -129,7 +129,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             ? `${currentProject?.description.slice(0, 50)}...`
             : currentProject?.description}
         </p>
-        <p className="hidden sm:block md:hidden">
+        <p className="overflow-hidden line-clamp-3 hidden sm:block md:hidden">
           {currentProject?.description.length > 70
             ? `${currentProject?.description.slice(0, 70)}...`
             : currentProject?.description}
@@ -141,19 +141,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </p>
 
         <p className="flex items-center gap-1 absolute right-4 top-4 font-medium">
-          <span className="block sm:hidden">
+          <span className="truncate block sm:hidden">
             {currentProject?.location.length > 30
               ? `${currentProject?.location.slice(0, 30)}...`
               : currentProject?.location}
           </span>
-          <span className="hidden sm:block md:hidden">
+          <span className="truncate hidden sm:block md:hidden">
             {currentProject?.location.length > 50
               ? `${currentProject?.location.slice(0, 50)}...`
               : currentProject?.location}
           </span>
-          <span className="hidden md:block">
-            {currentProject?.location.length > 100
-              ? `${currentProject?.location.slice(0, 100)}...`
+          <span className="line-clamp-1 hidden md:block">
+            {currentProject?.location.length > 65
+              ? `${currentProject?.location.slice(0, 65)}...`
               : currentProject?.location}
           </span>
           <svg

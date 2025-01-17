@@ -218,7 +218,7 @@ const EditUserPage = ({
   };
 
   return (
-    <div className="z-10 relative p-6 gap-10 flex flex-col w-11/12 m-auto">
+    <div className="relative p-6 gap-10 flex flex-col w-11/12 m-auto">
       {isConfirmModalOpen && (
         <ConfirmationModal
           message={t.confirmDeleteAccount}
