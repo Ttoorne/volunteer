@@ -106,24 +106,6 @@ const ChatPage: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
-    if (userId && token) {
-      const socketConnection = io(`http://localhost:${port}`, {
-        auth: { token },
-      });
-
-      socketConnection.on("connect", () => {
-        console.log(t.socketConnected);
-      });
-
-      setSocket(socketConnection);
-
-      return () => {
-        socketConnection.disconnect();
-      };
-    }
-  }, [userId, token]);
-
-  useEffect(() => {
     const fetchChatsAndUsers = async () => {
       if (token) {
         try {
@@ -244,7 +226,7 @@ const ChatPage: React.FC = () => {
     return unreadMessages.length > 0;
   };
 
-  if (!userId || !token || !socket)
+  if (!userId || !token)
     return (
       <div className="flex items-center justify-center min-h-screen">
         <span className="loading loading-ring loading-lg text-primary mx-auto"></span>

@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -37,7 +36,6 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/projects", projectRoutes);
 
-// Инициализация Socket.IO
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
@@ -45,6 +43,9 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+// Хранилище для отслеживания участников чатов
+const chatUsers = {};
 
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
@@ -57,17 +58,32 @@ io.use((socket, next) => {
     socket.user = user;
     next();
   } catch (err) {
+    console.error("Invalid token:", err.message);
     next(new Error("Invalid token"));
   }
 });
 
 io.on("connection", (socket) => {
-  // console.log(`User connected: ${socket.user.id}`);
+  console.log(`User connected: ${socket.user.id}`);
 
   // Присоединение к чату по chatId
   socket.on("joinChat", (chatId) => {
     socket.join(chatId);
     console.log(`User ${socket.user.id} joined chat: ${chatId}`);
+
+    // Отслеживаем пользователей чата
+    if (!chatUsers[chatId]) {
+      chatUsers[chatId] = new Set();
+    }
+    chatUsers[chatId].add(socket.user.id);
+
+    console.log(
+      `Current participants in chat ${chatId}:`,
+      Array.from(chatUsers[chatId])
+    );
+
+    // Логируем участников чата
+    io.to(chatId).emit("chatParticipants", Array.from(chatUsers[chatId]));
   });
 
   // Отправка сообщения в чат
@@ -82,10 +98,12 @@ io.on("connection", (socket) => {
 
     // Создание и сохранение сообщения
     const message = new Message({
-      chatId, // Добавляем chatId
-      senderId: socket.user.id, // Используем socket.user.id как senderId
-      receiverId, // Передаем receiverId
-      content, // Контент сообщения
+      chatId,
+      senderId: socket.user.id,
+      receiverId,
+      content,
+      isRead: false,
+      createdAt: new Date(),
     });
 
     try {
@@ -105,10 +123,11 @@ io.on("connection", (socket) => {
         });
         io.to(chatId).emit("receiveMessage", {
           chatId,
-          sender: socket.user.id,
-          receiver: receiverId,
+          senderId: socket.user.id,
+          receiverId,
           content,
-          timestamp: message.createdAt,
+          createdAt: messageData.createdAt || new Date().toISOString(),
+          isRead: messageData.isRead || false,
         });
       } else {
         console.log("Chat not found.");
@@ -118,14 +137,25 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Отсоединение от чата
   socket.on("disconnect", () => {
-    // console.log(`User disconnected: ${socket.user.id}`);
+    console.log(`User disconnected: ${socket.user.id}`);
+
+    // Удаление пользователя из списка участников чата
+    for (let chatId in chatUsers) {
+      if (chatUsers[chatId].has(socket.user.id)) {
+        chatUsers[chatId].delete(socket.user.id);
+        console.log(`User ${socket.user.id} removed from chat ${chatId}`);
+
+        // Логируем участников чата
+        io.to(chatId).emit("chatParticipants", Array.from(chatUsers[chatId]));
+      }
+    }
   });
 });
 
 const port = process.env.PORT || process.env.NEXT_PUBLIC_API_PORT;
 
-// Подключение Express и WebSocket
 server
   .listen(port, () => {
     console.log(`Server is running on port ${port}`);

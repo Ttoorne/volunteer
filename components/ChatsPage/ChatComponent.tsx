@@ -65,6 +65,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   const port = process.env.NEXT_PUBLIC_API_PORT;
 
   useEffect(() => {
+    if (!token || !chatId) return;
+
     socket.current = io(`http://localhost:${port}`, {
       transports: ["websocket"],
       auth: {
@@ -72,19 +74,42 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       },
     });
 
-    socket.current.emit("joinChat", chatId);
+    socket.current.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      socket.current.emit("joinChat", chatId);
+    });
+
+    socket.current.on("connect_error", (err: any) => {
+      console.error("Socket connection error:", err.message);
+    });
 
     socket.current.on("receiveMessage", (message: Message) => {
-      if (message.chatId === chatId) {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      }
+      setMessages((prevMessages) => [...prevMessages, message]);
     });
 
     return () => {
-      socket.current.off("receiveMessage");
-      socket.current.disconnect();
+      if (socket.current) {
+        socket.current.off("receiveMessage");
+        socket.current.disconnect();
+      }
     };
   }, [token, chatId]);
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+
+    socket.current.emit("sendMessage", {
+      chatId: chatId,
+      content: newMessage,
+      receiverId: chatParticipantId,
+      senderId: userId,
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    });
+
+    setNewMessage("");
+    setRefresh((prev) => !prev);
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -115,57 +140,27 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     fetchMessages();
   }, [chatId, token]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
-
-    try {
-      const response = await fetch(`${api}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          receiverId: chatParticipantId,
-          chatId: chatId,
-          content: newMessage,
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            senderId: userId,
-            receiverId: chatParticipantId,
-            content: newMessage,
-            createdAt: new Date().toISOString(),
-            chatId,
-            isRead: false,
-            _id: data.message._id,
-          },
-        ]);
-        setNewMessage("");
-        setRefresh((prev) => !prev);
-      } else {
-        console.error(data.error);
-      }
-    } catch (error) {
-      console.error(t.errorSendingMessages, error);
-    }
-  };
-
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
   };
 
   const formatTime = (dateString: string) => {
     const messageDate = new Date(dateString);
+
+    if (isNaN(messageDate.getTime())) {
+      console.error("Invalid date string:", dateString);
+      return "";
+    }
+
     return format(messageDate, "HH:mm");
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString || isNaN(new Date(dateString).getTime())) {
+      console.error("Invalid date string:", dateString);
+      return "";
+    }
+
     const messageDate = new Date(dateString);
     let localeToUse;
 
